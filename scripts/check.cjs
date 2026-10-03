@@ -12,3 +12,8 @@ const gaps=t.sections.flatMap(x=>[...x.html.matchAll(/data-q="(\d+)"/g)].map(m=>
 for(const n of [...Array.from({length:17},(_,i)=>i+1),...Array.from({length:10},(_,i)=>i+31)])assert.ok(gaps.includes(n));
 assert.equal(t.singles.length,4);assert.equal(t.pairs.length,3);assert.equal(Object.keys(t.answers).length,40);
 console.log('Passed: 40-answer key, all 27 gaps, 7 choice groups, reversed pairs, duplicates, partial credit, blanks, date/time variants and normalization.');
+
+assert.equal(Object.keys(t.explanations).length,20);
+for(let n=1;n<=20;n++)assert.ok(t.explanations[n].includes('Gợi ý:'));
+for(let n=1;n<=4;n++)assert.ok(t.transcripts[n].length>100);
+console.log('Passed: all 20 source explanations and 4 original transcripts imported.');

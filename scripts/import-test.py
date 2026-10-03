@@ -42,5 +42,24 @@ for idx in keys:
    num=int(lines[j]); val=lines[j+1].strip(); answers[str(num)]=[x.strip() for x in re.split(r',| / ',val)]
    j+=2
   else: j+=1
-(root/'dist/Listening - Vol 9/Test 1/test.js').write_text('window.TEST='+json.dumps({'sections':sections,'singles':singles,'pairs':pairs,'answers':answers},ensure_ascii=False)+';')
+explanations={}; transcripts={}
+for section_index, idx in enumerate(keys,1):
+ end=keys[section_index] if section_index<len(keys) else len(lines)
+ script_start=next((j for j in range(idx,end) if lines[j].strip()=='SCRIPT'),None)
+ explanation_start=next((j for j in range(idx,end) if lines[j].strip()=='EXPLANATION'),end)
+ if script_start is not None:
+  script_end=explanation_start
+  if section_index<4:
+   script_end=next((j for j in range(script_start+1,script_end) if lines[j].strip()=='SECTION '+str(section_index+1)),script_end)
+  transcripts[str(section_index)]=''.join('<p>'+formatted(p)+'</p>' for p in paras[script_start+1:script_end] if txt(p).strip())
+ current=None; chunks=[]
+ for p,t in zip(paras[explanation_start+1:end],lines[explanation_start+1:end]):
+  match=re.match(r'Câu (\d+)\b',t)
+  if match:
+   if current: explanations[str(current)]=''.join(chunks)
+   current=int(match.group(1));chunks=[]
+  if t.strip().startswith('SECTION '): break
+  if current and t.strip(): chunks.append('<p>'+formatted(p)+'</p>')
+ if current: explanations[str(current)]=''.join(chunks)
+(root/'dist/Listening - Vol 9/Test 1/test.js').write_text('window.TEST='+json.dumps({'sections':sections,'singles':singles,'pairs':pairs,'answers':answers,'explanations':explanations,'transcripts':transcripts},ensure_ascii=False)+';')
 (root/'dist/Listening - Vol 9/Test 1/plan.png').write_bytes(z.read('word/media/image1.png'))
