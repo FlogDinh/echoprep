@@ -4,3 +4,7 @@
 document-extracted.txt
 .sites-runtime/
 .github/
+.private/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

@@ -2,7 +2,26 @@
 
 Trang luyện IELTS Listening bằng tiếng Việt. Listening - Vol 9 có Test 1 và Test 2, mỗi test 40 câu / 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
 
-## Chạy trên máy
+## Đăng nhập và lịch sử theo tài khoản (bản máy chủ local)
+
+Yêu cầu Node.js 24 trở lên. Chạy:
+
+```sh
+node server/server.mjs
+```
+
+Mở http://127.0.0.1:8080. Dùng tài khoản đã cấu hình riêng trên máy. Mật khẩu chỉ được lưu dưới dạng scrypt hash có salt trong `.private/accounts.json`, không có trong mã nguồn hoặc frontend. Máy chủ kiểm tra cookie phiên HttpOnly / SameSite; đăng xuất thu hồi phiên. Lịch sử lưu trong `.private/history.sqlite` và truy vấn theo tài khoản từ phiên, không lấy tên tài khoản trong request. Không có đăng ký công khai. `.private` bị loại khỏi Git.
+
+Kiểm tra:
+
+```sh
+node server/check.mjs
+node server/browser-check.mjs
+```
+
+Các kiểm tra dùng tài khoản thử nghiệm và dữ liệu trong thư mục tạm; không thay đổi tài khoản/lịch sử thật. Kiểm tra trình duyệt yêu cầu Chrome trên macOS. Bản GitHub Pages vẫn là bản tĩnh, không có đăng nhập máy chủ. Lịch sử cũ trên GitHub Pages thuộc trình duyệt của trang đó và chưa được chuyển vào cơ sở dữ liệu local.
+
+## Bản tĩnh chạy trên máy
 
 Mở Terminal trong thư mục này và chạy:
 
