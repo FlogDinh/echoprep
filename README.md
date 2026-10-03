@@ -1,6 +1,6 @@
 # EchoPrep
 
-Trang luyện IELTS Listening bằng tiếng Việt. Listening - Vol 9 → Test 1 có 40 câu, 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
+Trang luyện IELTS Listening bằng tiếng Việt. Listening - Vol 9 có Test 1 và Test 2, mỗi test 40 câu / 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
 
 ## Chạy trên máy
 
@@ -12,7 +12,7 @@ python3 -m http.server 8080 --directory dist
 
 Mở http://localhost:8080. Có thể mở `dist/index.html` trực tiếp để sử dụng offline.
 
-Chọn cùng lúc bốn file `T1-S1.mp3` đến `T1-S4.mp3` từ thư mục nguồn. Audio phát trực tiếp trên thiết bị, không được gửi lên server. Nếu tên khác, chọn từng file trong section tương ứng. Mỗi section nhớ vị trí audio khi chuyển tab trong phiên hiện tại.
+Chọn Test 1 hoặc Test 2 trong thư viện. Chọn cùng lúc bốn file `T1-S1.mp3` đến `T1-S4.mp3` hoặc `T2-S1.mp3` đến `T2-S4.mp3` tương ứng từ thư mục nguồn. Audio phát trực tiếp trên thiết bị, không được gửi lên server. Nếu tên khác, chọn từng file trong section tương ứng. Mỗi section nhớ vị trí audio khi chuyển tab trong phiên hiện tại.
 
 - Câu 1–17: điền từ, tối đa ba từ và/hoặc một số.
 - Câu 18–20: kéo thả nhãn A–G lên ảnh gốc; cũng có thể chạm/chọn bằng bàn phím.
@@ -26,6 +26,7 @@ Nộp bài để xem số câu đúng/sai/bỏ qua, thời gian và đối chi�
 
 ```sh
 node scripts/check.cjs
+node scripts/check-test2.cjs
 ```
 
 ## GitHub Pages
@@ -47,6 +48,13 @@ Trong Settings → Pages chọn Deploy from a branch, nhánh `gh-pages`, thư m�
 
 ```sh
 python3 scripts/import-test.py
+python3 scripts/import-test2.py
 ```
 
-Script dùng file `../VOL 9 LISTENING/LIS TEST 1/[VOL 9] Listening Test 1.docx`, không sửa file nguồn. Audio và file DOCX gốc không được đưa vào repository.
+Script dùng file `../Reference/VOL 9 LISTENING/LIS TEST 1/[VOL 9] Listening Test 1.docx` và file Test 2 tương ứng, không sửa file nguồn. Audio và file DOCX gốc không được đưa vào repository.
+
+## Huỷ bài và Test 2
+
+Quay lại / Huỷ bài mở xác nhận trước khi bỏ lượt chưa nộp. Huỷ sẽ dừng audio, bỏ đáp án trong bộ nhớ và trở về thư viện; không tạo record lịch sử và không xoá các lượt đã nộp. Quay lại từ lượt đã nộp chỉ rời màn hình xem lại.
+
+Test 2: câu 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một đáp án; 16–20 kéo/chọn A–I trong lưu đồ; 25–30 kéo/chọn A–H để ghép ý. Giữ bảng và nội dung lưu đồ gốc. File Test 2 chưa có chữa chi tiết riêng; bottom sheet hiện đáp án và đoạn transcript gốc liên quan. Mỗi record lịch sử có testId; dữ liệu Test 1 đã lưu trước đây được giữ và mặc định testId=1.
