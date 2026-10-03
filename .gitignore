@@ -1,0 +1,6 @@
+.DS_Store
+*.mp3
+*.docx
+document-extracted.txt
+.sites-runtime/
+.github/
