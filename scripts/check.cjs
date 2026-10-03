@@ -17,3 +17,8 @@ assert.equal(Object.keys(t.explanations).length,20);
 for(let n=1;n<=20;n++)assert.ok(t.explanations[n].includes('Gợi ý:'));
 for(let n=1;n<=4;n++)assert.ok(t.transcripts[n].length>100);
 console.log('Passed: all 20 source explanations and 4 original transcripts imported.');
+
+for(let n=1;n<=40;n++){const ids=t.questionSegments[n];assert.ok(ids.length);assert.ok(ids.every(id=>t.transcriptSegments[Math.ceil(n/10)].some(segment=>segment.id===id)));}
+assert.ok(t.transcriptSegments[1].find(x=>x.id===t.questionSegments[1][0]).text.includes('Yours is $80'));
+assert.ok(t.transcriptSegments[2].find(x=>x.id===t.questionSegments[18][0]).text.includes("Head's office"));
+console.log('Passed: all 40 questions map to original transcript evidence in their correct section.');

@@ -42,7 +42,7 @@ for idx in keys:
    num=int(lines[j]); val=lines[j+1].strip(); answers[str(num)]=[x.strip() for x in re.split(r',| / ',val)]
    j+=2
   else: j+=1
-explanations={}; transcripts={}
+explanations={}; transcripts={}; transcript_segments={}
 for section_index, idx in enumerate(keys,1):
  end=keys[section_index] if section_index<len(keys) else len(lines)
  script_start=next((j for j in range(idx,end) if lines[j].strip()=='SCRIPT'),None)
@@ -51,6 +51,17 @@ for section_index, idx in enumerate(keys,1):
   script_end=explanation_start
   if section_index<4:
    script_end=next((j for j in range(script_start+1,script_end) if lines[j].strip()=='SECTION '+str(section_index+1)),script_end)
+  segments=[]
+  for p in paras[script_start+1:script_end]:
+   text=txt(p).strip()
+   if not text: continue
+   match=re.match(r'\((\d+):(\d+) - (\d+):(\d+)\)',text)
+   if match or not segments:
+    segments.append({'id':f's{section_index}-t{len(segments)}','text':text,'html':'<p>'+formatted(p)+'</p>','start':int(match[1])*60+int(match[2]) if match else None})
+   else:
+    segments[-1]['text']+='\n'+text
+    segments[-1]['html']+='<p>'+formatted(p)+'</p>'
+  transcript_segments[str(section_index)]=segments
   transcripts[str(section_index)]=''.join('<p>'+formatted(p)+'</p>' for p in paras[script_start+1:script_end] if txt(p).strip())
  current=None; chunks=[]
  for p,t in zip(paras[explanation_start+1:end],lines[explanation_start+1:end]):
@@ -61,5 +72,9 @@ for section_index, idx in enumerate(keys,1):
   if t.strip().startswith('SECTION '): break
   if current and t.strip(): chunks.append('<p>'+formatted(p)+'</p>')
  if current: explanations[str(current)]=''.join(chunks)
-(root/'dist/Listening - Vol 9/Test 1/test.js').write_text('window.TEST='+json.dumps({'sections':sections,'singles':singles,'pairs':pairs,'answers':answers,'explanations':explanations,'transcripts':transcripts},ensure_ascii=False)+';')
+# Match each question to the evidence in the original transcript, including shared pair evidence.
+cues={1:['Yours is $80'],2:['this house has a garage'],3:["Yeah, it's in the kitchen"],4:["doesn't have a heater"],5:['if you had a toaster'],6:['Friday evening'],7:['work at the supermarket'],8:['share the petrol'],9:['1st of June'],10:["I've got an exam"],11:['take the register'],12:['a hot meal is available'],13:['two breaks of 15 minutes'],14:['whole school to do sports'],15:['produce a poster'],16:['every month'],17:['set up clubs'],18:["Head's office"],19:['create a music room'],20:['turned into a gym'],21:['Then we can add'],22:['recording is very unclear'],23:['the tutor suggests'],24:['self-doubt'],25:['ought to borrow that','get out modern forensic techniques'],26:['ought to borrow that','get out modern forensic techniques'],27:["how we're going to record",'fitting in the writing up'],28:["how we're going to record",'fitting in the writing up'],29:['Leave that to me','discussion and conclusions'],30:['Leave that to me','discussion and conclusions'],31:['conserve the resources'],32:['stressful'],33:['competition'],34:['amount of light'],35:['reduction in their metabolism'],36:['deep into the mud'],37:['possibility of starvation'],38:['minimising evaporation'],39:['nest that is insulated'],40:['area around the heart']}
+question_segments={str(n):[segment['id'] for segment in transcript_segments[str((n-1)//10+1)] if any(cue.lower() in segment['text'].lower() for cue in cue_list)] for n,cue_list in cues.items()}
+assert all(question_segments.values()), 'Every question must map to original transcript evidence'
+(root/'dist/Listening - Vol 9/Test 1/test.js').write_text('window.TEST='+json.dumps({'sections':sections,'singles':singles,'pairs':pairs,'answers':answers,'explanations':explanations,'transcripts':transcripts,'transcriptSegments':transcript_segments,'questionSegments':question_segments},ensure_ascii=False)+';')
 (root/'dist/Listening - Vol 9/Test 1/plan.png').write_bytes(z.read('word/media/image1.png'))
