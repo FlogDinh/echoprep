@@ -77,3 +77,7 @@ Script dùng file `../Reference/VOL 9 LISTENING/LIS TEST 1/[VOL 9] Listening Tes
 Quay lại / Huỷ bài mở xác nhận trước khi bỏ lượt chưa nộp. Huỷ sẽ dừng audio, bỏ đáp án trong bộ nhớ và trở về thư viện; không tạo record lịch sử và không xoá các lượt đã nộp. Quay lại từ lượt đã nộp chỉ rời màn hình xem lại.
 
 Test 2: câu 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một đáp án; 16–20 kéo/chọn A–I trong lưu đồ; 25–30 kéo/chọn A–H để ghép ý. Giữ bảng và nội dung lưu đồ gốc. File Test 2 chưa có chữa chi tiết riêng; bottom sheet hiện đáp án và đoạn transcript gốc liên quan. Mỗi record lịch sử có testId; dữ liệu Test 1 đã lưu trước đây được giữ và mặc định testId=1.
+
+## Bắt đầu lượt làm
+
+Chọn test chỉ mở màn hình chuẩn bị, giữ đồng hồ ở 00:00:00. Có thể chọn audio trước. Bấm Bắt đầu làm bài mới hiển thị câu hỏi, cho phát audio và bắt đầu đếm giờ. Làm lại bài từ lịch sử cũng quay về màn hình chuẩn bị.
