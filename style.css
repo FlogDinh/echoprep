@@ -13,3 +13,4 @@ aside .test-active{background:white;border-color:var(--line);color:#475569;font-
 #start-panel{padding:32px;background:white;border:1px solid var(--line);border-radius:12px;margin:20px 0}#start-panel p{color:#64748b;line-height:1.7;margin:0 0 20px}#begin-attempt{padding:13px 24px;font-weight:600}.ready-mode{padding-bottom:130px}.ready-mode footer{padding-bottom:12px}
 
 .review-mode .choice.wrong-option{background:#fff1f2!important;border-color:#ef4444!important;color:#b91c1c!important}.review-mode .choice.wrong-option .letter{color:#b91c1c}.review-mode .choice.wrong-option input{accent-color:#dc2626}.review-mode .answer-correction.wrong{color:#b91c1c!important}
+mark.keyword-highlight{background:#ffeb69;color:inherit;border-radius:2px;padding:0;box-decoration-break:clone;-webkit-box-decoration-break:clone}#paper ::selection{background:#ffeb69;color:inherit}
