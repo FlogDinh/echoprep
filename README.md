@@ -81,3 +81,7 @@ Test 2: câu 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một �
 ## Bắt đầu lượt làm
 
 Chọn test chỉ mở màn hình chuẩn bị, giữ đồng hồ ở 00:00:00. Có thể chọn audio trước. Bấm Bắt đầu làm bài mới hiển thị câu hỏi, cho phát audio và bắt đầu đếm giờ. Làm lại bài từ lịch sử cũng quay về màn hình chuẩn bị.
+
+## Highlight keyword
+
+Khi đang làm bài, kéo chuột chọn chữ trong đề để bôi vàng. Có thể chọn qua chữ đậm/nghiêng và nhiều đoạn. Vùng chọn được giữ khi đổi section và lưu cùng record lúc nộp; xem lại record sẽ phục hồi đúng các vùng đó. Mỗi lượt mới/làm lại/huỷ đều xoá highlight trong bộ nhớ, không sửa highlight của lượt cũ. Bản local lưu highlight theo tài khoản trên máy chủ; bản GitHub Pages lưu cùng lịch sử trình duyệt.
