@@ -8,3 +8,6 @@ document-extracted.txt
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Original practice documents and offline media
+Reference/

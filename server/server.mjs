@@ -32,7 +32,7 @@ http.createServer(async(req,res)=>{try{
  if(pathname==='/api/logout'&&req.method==='POST'){const token=req.headers.cookie?.match(/echo_session=([a-f0-9]{64})/)?.[1];if(token)db.prepare('DELETE FROM sessions WHERE token_hash=?').run(digest(token));return send(res,200,{ok:true},{'Set-Cookie':'echo_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});}
  if(pathname==='/api/history'&&req.method==='GET')return send(res,200,db.prepare('SELECT record FROM attempts WHERE username=? ORDER BY rowid').all(username).map(r=>JSON.parse(r.record)));
  if(pathname==='/api/history'&&req.method==='POST'){
-  const r=await body(req);if(typeof r.id!=='string'||r.id.length>100||![1,2].includes(r.testId||1)||!r.answers||r.result?.rows?.length!==40||!Number.isFinite(r.elapsed)||r.elapsed<0||!Number.isFinite(Date.parse(r.submittedAt)))return send(res,400,{error:'invalid_record'});
+  const r=await body(req);if(typeof r.id!=='string'||r.id.length>100||!((r.module||'listening')==='reading'?[1]:[1,2]).includes(r.testId||1)||!['listening','reading'].includes(r.module||'listening')||!r.answers||r.result?.rows?.length!==40||!Number.isFinite(r.elapsed)||r.elapsed<0||!Number.isFinite(Date.parse(r.submittedAt)))return send(res,400,{error:'invalid_record'});
   // Account ownership is derived exclusively from the session, never from the request body.
   delete r.username;delete r.account;db.prepare('INSERT OR IGNORE INTO attempts VALUES(?,?,?)').run(username,r.id,JSON.stringify(r));return send(res,201,{ok:true});
  }

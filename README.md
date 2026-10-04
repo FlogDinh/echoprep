@@ -1,6 +1,6 @@
 # EchoPrep
 
-Trang luyện IELTS Listening bằng tiếng Việt. Listening - Vol 9 có Test 1 và Test 2, mỗi test 40 câu / 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
+Trang luyện IELTS Listening và Reading bằng tiếng Việt. Listening - Vol 9 có Test 1 và Test 2, mỗi test 40 câu / 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
 
 ## Đăng nhập và lịch sử theo tài khoản (bản máy chủ local)
 
@@ -46,6 +46,7 @@ Nộp bài để xem số câu đúng/sai/bỏ qua, thời gian và đối chi�
 ```sh
 node scripts/check.cjs
 node scripts/check-test2.cjs
+node scripts/check-reading.cjs
 ```
 
 ## GitHub Pages
@@ -68,6 +69,7 @@ Trong Settings → Pages chọn Deploy from a branch, nhánh `gh-pages`, thư m�
 ```sh
 python3 scripts/import-test.py
 python3 scripts/import-test2.py
+python3 scripts/import-reading.py
 ```
 
 Script dùng file `../Reference/VOL 9 LISTENING/LIS TEST 1/[VOL 9] Listening Test 1.docx` và file Test 2 tương ứng, không sửa file nguồn. Audio và file DOCX gốc không được đưa vào repository.
@@ -85,3 +87,13 @@ Chọn test chỉ mở màn hình chuẩn bị, giữ đồng hồ ở 00:00:00.
 ## Highlight keyword
 
 Khi đang làm bài, kéo chuột chọn chữ trong đề để bôi vàng. Có thể chọn qua chữ đậm/nghiêng và nhiều đoạn. Vùng chọn được giữ khi đổi section và lưu cùng record lúc nộp; xem lại record sẽ phục hồi đúng các vùng đó. Mỗi lượt mới/làm lại/huỷ đều xoá highlight trong bộ nhớ, không sửa highlight của lượt cũ. Bản local lưu highlight theo tài khoản trên máy chủ; bản GitHub Pages lưu cùng lịch sử trình duyệt.
+
+## Reading - Vol 9 / Test 1
+
+Chọn Listening / Reading trong menu, sau đó chọn test của Vol 9. Reading Test 1 giữ bài đọc bên trái và câu hỏi bên phải, hai cột cuộn độc lập. Dãy số câu chia theo Passage 1 (1–13), Passage 2 (14–26), Passage 3 (27–40). Heading có thể kéo thả hoặc chọn ngay trên đoạn đọc; lựa chọn đồng bộ với câu hỏi bên phải. Các dạng còn lại gồm TRUE/FALSE/NOT GIVEN, điền từ, chọn hai đáp án, ghép thông tin với đoạn và trắc nghiệm.
+
+Mặc định Reading đếm xuôi không giới hạn; tuỳ chọn đếm ngược bắt đầu từ 60 phút. Cả hai chỉ chạy sau khi bấm Bắt đầu làm bài. Hết thời gian đếm ngược hiện “Hết giờ” và thời gian vượt, không tự nộp hay xoá đáp án. Đổi passage luôn giữ đáp án và highlight trong phiên cho đến khi nộp hoặc huỷ; tải lại trang sẽ mất lượt chưa nộp.
+
+Sau khi nộp, câu sai đỏ và câu đúng xanh; Xem giải thích mở bottom sheet và cuộn đến đoạn đọc chứa bằng chứng. Đủ 40 lời giải được lấy từ file gốc. Highlight ở cả hai cột được lưu cùng mỗi lượt nộp, lượt làm lại bắt đầu trống. Lịch sử phân theo Listening / Reading và vẫn giữ các lượt Listening cũ. Bản máy chủ local lưu theo tài khoản, bản GitHub Pages lưu trên trình duyệt.
+
+Nguồn Reading: `Reference/VOL 9 READING/[VOL 9] Reading Test 1.docx`. Thư mục tài liệu nguồn không đưa vào Git; importer tạo dữ liệu web trong `dist/Reading - Vol 9/Test 1/`.
