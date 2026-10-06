@@ -1,45 +1,61 @@
 # EchoPrep
 
-Trang luyện IELTS Listening và Reading bằng tiếng Việt. Listening - Vol 9 có Test 1 và Test 2, mỗi test 40 câu / 4 sections; đề và đáp án được nhập từ file DOCX của người dùng.
+Luyện IELTS Listening và Reading bằng tiếng Việt. Vol 9 hiện có Listening Test 1, Listening Test 2 và Reading Test 1. Website công khai: https://flogdinh.github.io/echoprep/.
 
-## Đăng nhập và lịch sử theo tài khoản (bản máy chủ local)
+## Lịch sử chung, không đăng nhập
 
-Yêu cầu Node.js 24 trở lên. Chạy:
+Ứng dụng không còn yêu cầu account. GitHub Pages phục vụ giao diện; Supabase lưu lịch sử chung. Mỗi lần nộp là một record riêng, gồm thời gian làm, đáp án, kết quả và highlight. Mọi máy mở cùng link đọc được các lượt đã đồng bộ. Người mở link có thể thêm lượt làm; frontend không có quyền sửa hoặc xoá lượt cũ.
+
+**Cần cấu hình Supabase trước khi lịch sử đồng bộ qua Internet.** Nếu chưa cấu hình, giao diện ghi rõ lịch sử đang tạm lưu trên trình duyệt. Bản máy chủ local chỉ chia sẻ dữ liệu của máy chủ đó, chưa tự trở thành kho Internet.
+
+### Kết nối Supabase (một lần)
+
+1. Tạo project Free tại https://supabase.com/dashboard.
+2. Trong SQL Editor, chạy toàn bộ [supabase/shared-history.sql](supabase/shared-history.sql). SQL tạo bảng `echoprep_attempts`, bật Row Level Security, chỉ cấp SELECT và INSERT cho khách không đăng nhập; không cấp UPDATE/DELETE.
+3. Lấy Project URL và Publishable key tại Project Settings / API Keys. Legacy `anon` key cũng được hỗ trợ. **Không dùng Secret key hoặc `service_role`.** URL và Publishable key được thiết kế để xuất hiện trong frontend; quyền truy cập do RLS và grants trong SQL kiểm soát.
+4. Chạy `node scripts/configure-shared-history.mjs`, nhập hai giá trị trên. Script tạo cấu hình tại `dist/shared-history-config.js`.
+5. Triển khai `dist` lên GitHub Pages theo hướng dẫn bên dưới.
+6. Mở trang bằng trình duyệt cũ trên máy đã làm bài: các lượt trong localStorage tự đưa vào hàng chờ và gửi lên kho chung. Kiểm tra trạng thái **Đã đồng bộ**, rồi mở cùng link trên máy khác hoặc cửa sổ ẩn danh để xác nhận lịch sử hiện đầy đủ.
+
+Nguồn: [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Free plan](https://supabase.com/pricing). Gói Free có thể tạm dừng project sau một tuần không hoạt động; khi đó khôi phục trong Dashboard để đồng bộ tiếp.
+
+Mất mạng hoặc kho dữ liệu chưa sẵn sàng: lượt mới giữ trong hàng chờ trên trình duyệt, không giả báo đã đồng bộ. Kết nối trở lại sẽ tự thử gửi lại; có nút **Đồng bộ lại** trong lịch sử. Mở lại trang cũng phục hồi hàng chờ. Retry dùng cùng ID nên không tạo bản sao; làm lại và nộp lần nữa tạo ID mới. Không xoá bộ nhớ trình duyệt trước khi các lượt chờ đã đồng bộ. Nếu trình duyệt không cho lưu, ứng dụng cảnh báo lượt chỉ đang ở bộ nhớ.
+
+## Chạy local
+
+Node.js 24 trở lên:
 
 ```sh
 node server/server.mjs
 ```
 
-Mở http://127.0.0.1:8080. Dùng tài khoản đã cấu hình riêng trên máy. Mật khẩu chỉ được lưu dưới dạng scrypt hash có salt trong `.private/accounts.json`, không có trong mã nguồn hoặc frontend. Máy chủ kiểm tra cookie phiên HttpOnly / SameSite; đăng xuất thu hồi phiên. Lịch sử lưu trong `.private/history.sqlite` và truy vấn theo tài khoản từ phiên, không lấy tên tài khoản trong request. Không có đăng ký công khai. `.private` bị loại khỏi Git.
+Mở http://127.0.0.1:8080 trực tiếp, không cần đăng nhập. Khi Supabase chưa cấu hình, máy chủ lưu lịch sử chung trong `.private/history.sqlite`. Các bảng account/lịch sử cũ được giữ nguyên; các lượt hợp lệ được sao chép sang lịch sử chung mà không mang theo username/account. Mật khẩu cũ không được đưa vào frontend hoặc Git. Khi cấu hình Supabase, giao diện ưu tiên kho chung trên Internet.
 
-Kiểm tra:
-
-```sh
-node server/check.mjs
-node server/browser-check.mjs
-```
-
-Các kiểm tra dùng tài khoản thử nghiệm và dữ liệu trong thư mục tạm; không thay đổi tài khoản/lịch sử thật. Kiểm tra trình duyệt yêu cầu Chrome trên macOS. Bản GitHub Pages vẫn là bản tĩnh, không có đăng nhập máy chủ. Lịch sử cũ trên GitHub Pages thuộc trình duyệt của trang đó và chưa được chuyển vào cơ sở dữ liệu local.
-
-## Bản tĩnh chạy trên máy
-
-Mở Terminal trong thư mục này và chạy:
+Bản tĩnh không cần Node:
 
 ```sh
 python3 -m http.server 8080 --directory dist
 ```
 
-Mở http://localhost:8080. Có thể mở `dist/index.html` trực tiếp để sử dụng offline.
+Mở http://localhost:8080. Dữ liệu lịch sử cũ của mỗi địa chỉ web/trình duyệt nằm riêng; phải mở đúng địa chỉ cũ để chuyển chúng lên kho chung.
 
-Chọn Test 1 hoặc Test 2 trong thư viện. Chọn cùng lúc bốn file `T1-S1.mp3` đến `T1-S4.mp3` hoặc `T2-S1.mp3` đến `T2-S4.mp3` tương ứng từ thư mục nguồn. Audio phát trực tiếp trên thiết bị, không được gửi lên server. Nếu tên khác, chọn từng file trong section tương ứng. Mỗi section nhớ vị trí audio khi chuyển tab trong phiên hiện tại.
+## Làm bài
 
-- Câu 1–17: điền từ, tối đa ba từ và/hoặc một số.
-- Câu 18–20: kéo thả nhãn A–G lên ảnh gốc; cũng có thể chạm/chọn bằng bàn phím.
-- Câu 21–24: chọn một đáp án A–C.
-- Câu 25–30: ba nhóm chọn hai đáp án A–E; chấm không phụ thuộc thứ tự, không tính hai lần đáp án trùng.
-- Câu 31–40: điền một từ.
+Menu Listening / Reading → Vol 9 → Test. Chọn bài chỉ mở màn hình chuẩn bị; bấm **Bắt đầu làm bài** mới chạy giờ. Quay lại / Huỷ bài cần xác nhận trước khi bỏ lượt chưa nộp; huỷ không tạo record và không xoá lượt đã nộp. Đáp án và highlight giữ khi đổi section/passage trong phiên; tải lại trang sẽ mất lượt chưa nộp. Kéo chuột chọn chữ để bôi vàng; mỗi lượt làm lại bắt đầu trống, highlight của lượt đã nộp vẫn giữ.
 
-Nộp bài để xem số câu đúng/sai/bỏ qua, thời gian và đối chiếu từng đáp án. Sau khi nộp, màn hình chia hai cột: transcript gốc bên trái, câu hỏi kèm đáp án bên phải. Chọn câu hoặc Xem giải thích để mở bottom sheet dưới câu hỏi và tự cuộn/đánh dấu đoạn transcript chứa đáp án. Hai cột cuộn độc lập, thanh nghe và các nhóm số câu luôn hiện. Điện thoại xếp transcript trên câu hỏi. Bảng kết quả vẫn mở được bằng nút riêng. File gốc có giải thích chi tiết câu 1–20; câu 21–40 hiện đáp án và transcript gốc với ghi chú rõ chưa có lời giải riêng. Chuyển section và chọn câu dùng chung dãy số câu ở cuối trang. Giữ nguyên nội dung, chữ đậm/nghiêng và ảnh sơ đồ; khoảng cách và cỡ chữ được điều chỉnh cho trình duyệt và màn hình nhỏ. Không mô phỏng chính xác phân trang của Word. Lượt đang làm chưa nộp chỉ ở bộ nhớ. Mỗi lần nộp lưu một record riêng trong localStorage của trình duyệt: thời gian nộp, thời lượng, đáp án và kết quả chấm tại thời điểm nộp. Có thể xem lại hoặc làm lại mà vẫn giữ lượt cũ. Lịch sử không đồng bộ giữa thiết bị/trình duyệt; xoá dữ liệu trang sẽ xoá lịch sử. Đáp án có trong mã nguồn của ứng dụng tự luyện; đây không phải hệ thống thi có bảo mật đáp án.
+### Listening
+
+Chọn bốn file `T1-S1.mp3` … `T1-S4.mp3` hoặc `T2-S1.mp3` … `T2-S4.mp3` từ máy. Audio không gửi lên server; từng section nhớ vị trí nghe trong phiên. Tên khác thì chọn từng file tại section tương ứng.
+
+Test 1: câu 1–17 điền từ; 18–20 kéo/chọn A–G trên sơ đồ gốc; 21–24 chọn một đáp án; 25–30 chọn hai đáp án, chấm không phụ thuộc thứ tự và không tính trùng; 31–40 điền một từ. Test 2: 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một đáp án; 16–20 kéo/chọn A–I trên lưu đồ; 25–30 ghép ý A–H.
+
+Sau khi nộp: transcript trái, câu hỏi phải, hai cột cuộn riêng. Xem giải thích mở bottom sheet và cuộn đến bằng chứng. Test 1 có lời giải riêng câu 1–20; các câu còn lại và Test 2 hiện đáp án/đoạn transcript nguồn, ghi rõ chưa có lời giải riêng.
+
+### Reading
+
+Reading Test 1 có ba passage (1–13, 14–26, 27–40), đủ 40 lời giải nguồn. Bài đọc trái, câu hỏi phải. Các dạng: TRUE/FALSE/NOT GIVEN, heading, ghép đoạn, điền từ và trắc nghiệm. Heading kéo/chọn được ngay trên đoạn đọc và đồng bộ với lựa chọn bên phải.
+
+Mặc định đếm xuôi không giới hạn; có tuỳ chọn đếm ngược 60 phút. Hết giờ hiện thời gian vượt, không tự nộp hay xoá đáp án. Sau khi nộp, sai đỏ / đúng xanh; bottom sheet hiển thị lời giải và đánh dấu đoạn đọc chứa đáp án. Highlight ở cả bài đọc và câu hỏi lưu theo lượt.
 
 ## Kiểm tra
 
@@ -47,24 +63,28 @@ Nộp bài để xem số câu đúng/sai/bỏ qua, thời gian và đối chi�
 node scripts/check.cjs
 node scripts/check-test2.cjs
 node scripts/check-reading.cjs
+node scripts/check-shared-history.cjs
+node server/check.mjs
+node server/browser-check.mjs
 ```
+
+Kiểm tra dùng dữ liệu tạm, không sửa lịch sử thật. Browser check yêu cầu Chrome trên macOS. Kiểm tra shared history mô phỏng REST API: hai bộ nhớ độc lập, chuyển lịch sử cũ, hàng chờ offline/reload, chống trùng, refresh đồng thời nộp, chuyển backend, phân trang và highlight. Kết nối Supabase thật cần kiểm tra sau khi cung cấp cấu hình/chạy SQL.
 
 ## GitHub Pages
 
-Trang được triển khai từ nhánh `gh-pages`; mã nguồn nằm trên nhánh `main`.
-
-Sau khi cập nhật, chạy:
+Mã nguồn trên `main`; trang triển khai từ `gh-pages` / root:
 
 ```sh
-node scripts/check.cjs
-git push origin main
+git add dist scripts server supabase README.md
+git commit -m 'Update EchoPrep'
 git subtree split --prefix dist -b pages-update
-git push origin pages-update:gh-pages
+git push origin main pages-update:gh-pages
+gh api --method POST repos/FlogDinh/echoprep/pages/builds
 ```
 
-Trong Settings → Pages chọn Deploy from a branch, nhánh `gh-pages`, thư mục `/ (root)`.
+Đổi tên branch tạm `pages-update` cho các lần sau. Kiểm tra trạng thái triển khai bằng `gh api repos/FlogDinh/echoprep/pages/builds/latest`.
 
-## Nhập lại đề gốc
+## Nhập lại đề nguồn
 
 ```sh
 python3 scripts/import-test.py
@@ -72,28 +92,4 @@ python3 scripts/import-test2.py
 python3 scripts/import-reading.py
 ```
 
-Script dùng file `../Reference/VOL 9 LISTENING/LIS TEST 1/[VOL 9] Listening Test 1.docx` và file Test 2 tương ứng, không sửa file nguồn. Audio và file DOCX gốc không được đưa vào repository.
-
-## Huỷ bài và Test 2
-
-Quay lại / Huỷ bài mở xác nhận trước khi bỏ lượt chưa nộp. Huỷ sẽ dừng audio, bỏ đáp án trong bộ nhớ và trở về thư viện; không tạo record lịch sử và không xoá các lượt đã nộp. Quay lại từ lượt đã nộp chỉ rời màn hình xem lại.
-
-Test 2: câu 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một đáp án; 16–20 kéo/chọn A–I trong lưu đồ; 25–30 kéo/chọn A–H để ghép ý. Giữ bảng và nội dung lưu đồ gốc. File Test 2 chưa có chữa chi tiết riêng; bottom sheet hiện đáp án và đoạn transcript gốc liên quan. Mỗi record lịch sử có testId; dữ liệu Test 1 đã lưu trước đây được giữ và mặc định testId=1.
-
-## Bắt đầu lượt làm
-
-Chọn test chỉ mở màn hình chuẩn bị, giữ đồng hồ ở 00:00:00. Có thể chọn audio trước. Bấm Bắt đầu làm bài mới hiển thị câu hỏi, cho phát audio và bắt đầu đếm giờ. Làm lại bài từ lịch sử cũng quay về màn hình chuẩn bị.
-
-## Highlight keyword
-
-Khi đang làm bài, kéo chuột chọn chữ trong đề để bôi vàng. Có thể chọn qua chữ đậm/nghiêng và nhiều đoạn. Vùng chọn được giữ khi đổi section và lưu cùng record lúc nộp; xem lại record sẽ phục hồi đúng các vùng đó. Mỗi lượt mới/làm lại/huỷ đều xoá highlight trong bộ nhớ, không sửa highlight của lượt cũ. Bản local lưu highlight theo tài khoản trên máy chủ; bản GitHub Pages lưu cùng lịch sử trình duyệt.
-
-## Reading - Vol 9 / Test 1
-
-Chọn Listening / Reading trong menu, sau đó chọn test của Vol 9. Reading Test 1 giữ bài đọc bên trái và câu hỏi bên phải, hai cột cuộn độc lập. Dãy số câu chia theo Passage 1 (1–13), Passage 2 (14–26), Passage 3 (27–40). Heading có thể kéo thả hoặc chọn ngay trên đoạn đọc; lựa chọn đồng bộ với câu hỏi bên phải. Các dạng còn lại gồm TRUE/FALSE/NOT GIVEN, điền từ, chọn hai đáp án, ghép thông tin với đoạn và trắc nghiệm.
-
-Mặc định Reading đếm xuôi không giới hạn; tuỳ chọn đếm ngược bắt đầu từ 60 phút. Cả hai chỉ chạy sau khi bấm Bắt đầu làm bài. Hết thời gian đếm ngược hiện “Hết giờ” và thời gian vượt, không tự nộp hay xoá đáp án. Đổi passage luôn giữ đáp án và highlight trong phiên cho đến khi nộp hoặc huỷ; tải lại trang sẽ mất lượt chưa nộp.
-
-Sau khi nộp, câu sai đỏ và câu đúng xanh; Xem giải thích mở bottom sheet và cuộn đến đoạn đọc chứa bằng chứng. Đủ 40 lời giải được lấy từ file gốc. Highlight ở cả hai cột được lưu cùng mỗi lượt nộp, lượt làm lại bắt đầu trống. Lịch sử phân theo Listening / Reading và vẫn giữ các lượt Listening cũ. Bản máy chủ local lưu theo tài khoản, bản GitHub Pages lưu trên trình duyệt.
-
-Nguồn Reading: `Reference/VOL 9 READING/[VOL 9] Reading Test 1.docx`. Thư mục tài liệu nguồn không đưa vào Git; importer tạo dữ liệu web trong `dist/Reading - Vol 9/Test 1/`.
+Listening nguồn: `../Reference/VOL 9 LISTENING/LIS TEST 1/` và Test 2 tương ứng. Reading nguồn: `Reference/VOL 9 READING/[VOL 9] Reading Test 1.docx`. Không sửa file nguồn; DOCX/audio không đưa vào Git. Nội dung/chữ đậm/nghiêng/sơ đồ được giữ, bố cục điều chỉnh cho web và màn hình nhỏ; không mô phỏng phân trang Word. Đây là ứng dụng tự luyện, đáp án nằm trong dữ liệu frontend.
