@@ -1,0 +1,238 @@
+[
+  {
+    "module": "listening",
+    "test": 3,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": [
+      "Câu 27–30: ngân hàng nguồn ghi nhãn D hai lần; nhãn cuối được hiển thị là G (unavailable) theo dãy A–G và key gốc."
+    ]
+  },
+  {
+    "module": "listening",
+    "test": 4,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "listening",
+    "test": 5,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 1,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "listening",
+    "test": 6,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 1,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "listening",
+    "test": 7,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 1,
+    "unlinkedEvidence": [],
+    "warnings": [
+      "Key nguồn câu 32–39 bị lệch thứ tự. Đáp án trên web được đối chiếu lại từng chỗ trống với transcript gốc; bản key ban đầu được giữ trong dữ liệu nguồn để đối chiếu."
+    ]
+  },
+  {
+    "module": "listening",
+    "test": 8,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 1,
+    "unlinkedEvidence": [],
+    "warnings": [
+      "Câu 36: key nguồn ghi “glass”, transcript ghi “grass”. Web chấm “grass” theo đoạn nghe gốc."
+    ]
+  },
+  {
+    "module": "listening",
+    "test": 9,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 1,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 2,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": [
+      "Câu 24–26: phương án F bị thiếu ở phần đề, được khôi phục nguyên văn từ phần chữa chi tiết trong cùng file nguồn."
+    ]
+  },
+  {
+    "module": "reading",
+    "test": 3,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 4,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 39,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 5,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": [
+      "Câu 14–20: heading ix bị thiếu ở phần đề, được khôi phục nguyên văn từ phần chữa câu 16 trong cùng file nguồn."
+    ]
+  },
+  {
+    "module": "reading",
+    "test": 6,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 7,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 8,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 9,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 40,
+    "images": 0,
+    "unlinkedEvidence": [],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 10,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 6,
+    "images": 0,
+    "unlinkedEvidence": [
+      33,
+      34
+    ],
+    "warnings": []
+  },
+  {
+    "module": "reading",
+    "test": 11,
+    "questions": 40,
+    "answers": 40,
+    "explanations": 0,
+    "images": 0,
+    "unlinkedEvidence": [
+      6,
+      37,
+      40
+    ],
+    "warnings": [
+      "Câu 13: key nguồn ghi “Varnis”; chấp nhận thêm “varnished” theo nội dung passage."
+    ]
+  },
+  {
+    "module": "reading",
+    "test": 12,
+    "questions": 40,
+    "answers": 0,
+    "explanations": 0,
+    "images": 0,
+    "unlinkedEvidence": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ],
+    "warnings": [
+      "File đáp án nguồn đang trống. Bài này chỉ luyện tập, chưa chấm đúng/sai."
+    ]
+  }
+]

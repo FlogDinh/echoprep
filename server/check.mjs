@@ -11,7 +11,7 @@ try{
  const post=value=>request('/api/history',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(value)});
  assert.equal((await post({...record,id:'new-attempt',username:'spoofed'})).status,201);await post({...record,id:'new-attempt',elapsed:999});rows=await (await request('/api/history')).json();assert.equal(rows.length,2);assert.equal(rows.find(r=>r.id==='new-attempt').elapsed,7);
  assert.equal((await request('/api/history',{headers:{Cookie:'anything=irrelevant'}})).status,200);assert.equal((await request('/api/history',{method:'DELETE',headers:{Origin:origin}})).status,404);
- assert.equal((await post({...record,id:'invalid',testId:3})).status,400);assert.equal((await request('/api/history',{method:'POST',headers:{Origin:'https://another.example'},body:'{}'})).status,403);
+ assert.equal((await post({...record,id:'invalid',testId:10})).status,400);assert.equal((await request('/api/history',{method:'POST',headers:{Origin:'https://another.example'},body:'{}'})).status,403);
  const db=new DatabaseSync(path.join(directory,'history.sqlite'),{readOnly:true});assert.equal(db.prepare('SELECT COUNT(*) AS n FROM attempts').get().n,1);assert.equal(db.prepare('SELECT COUNT(*) AS n FROM shared_attempts').get().n,2);db.close();
  console.log('PASS: no login/cookies required, shared read/append history, original account history preserved/migrated, sanitized records, immutable duplicate IDs, validation and Origin check.');
 }finally{server.kill('SIGTERM');}

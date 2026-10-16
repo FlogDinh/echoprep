@@ -1,25 +1,39 @@
 # EchoPrep
 
-Luyện IELTS Listening và Reading bằng tiếng Việt. Vol 9 hiện có Listening Test 1, Listening Test 2 và Reading Test 1. Website công khai: https://flogdinh.github.io/echoprep/.
+Luyện IELTS Listening và Reading bằng tiếng Việt. Website: https://flogdinh.github.io/echoprep/.
 
-## Lịch sử chung, không đăng nhập
+Vol 9 hiện có **Listening Test 1–9** và **Reading Test 1–12**. Mỗi test có 40 câu; Listening chia bốn section, Reading chia ba passage. Chọn Listening / Reading → Vol 9 → Test, rồi bấm **Bắt đầu làm bài** mới chạy đồng hồ.
 
-Ứng dụng không còn yêu cầu account. GitHub Pages phục vụ giao diện; Supabase lưu lịch sử chung. Mỗi lần nộp là một record riêng, gồm thời gian làm, đáp án, kết quả và highlight. Mọi máy mở cùng link đọc được các lượt đã đồng bộ. Người mở link có thể thêm lượt làm; frontend không có quyền sửa hoặc xoá lượt cũ.
+## Tài khoản và lịch sử
 
-**Cần cấu hình Supabase trước khi lịch sử đồng bộ qua Internet.** Nếu chưa cấu hình, giao diện ghi rõ lịch sử đang tạm lưu trên trình duyệt. Bản máy chủ local chỉ chia sẻ dữ liệu của máy chủ đó, chưa tự trở thành kho Internet.
+Không cần đăng nhập; không có đăng ký, phân quyền theo account, định danh thiết bị hoặc cấu hình Supabase. Các lượt đã lưu trước đây vẫn được giữ. Mỗi lần nộp tạo một lượt riêng, gồm đáp án, thời lượng, kết quả và highlight; có thể xem lại hoặc làm lại. Bản GitHub Pages lưu lịch sử bằng bộ nhớ trình duyệt; không có đồng bộ giữa các máy. Bản local dùng SQLite khi chạy máy chủ bên dưới. Không cần cấu hình dịch vụ ngoài để luyện bài.
 
-### Kết nối Supabase (một lần)
+## Làm bài và chữa bài
 
-1. Tạo project Free tại https://supabase.com/dashboard.
-2. Trong SQL Editor, chạy toàn bộ [supabase/shared-history.sql](supabase/shared-history.sql). SQL tạo bảng `echoprep_attempts`, bật Row Level Security, chỉ cấp SELECT và INSERT cho khách không đăng nhập; không cấp UPDATE/DELETE.
-3. Lấy Project URL và Publishable key tại Project Settings / API Keys. Legacy `anon` key cũng được hỗ trợ. **Không dùng Secret key hoặc `service_role`.** URL và Publishable key được thiết kế để xuất hiện trong frontend; quyền truy cập do RLS và grants trong SQL kiểm soát.
-4. Chạy `node scripts/configure-shared-history.mjs`, nhập hai giá trị trên. Script tạo cấu hình tại `dist/shared-history-config.js`.
-5. Triển khai `dist` lên GitHub Pages theo hướng dẫn bên dưới.
-6. Mở trang bằng trình duyệt cũ trên máy đã làm bài: các lượt trong localStorage tự đưa vào hàng chờ và gửi lên kho chung. Kiểm tra trạng thái **Đã đồng bộ**, rồi mở cùng link trên máy khác hoặc cửa sổ ẩn danh để xác nhận lịch sử hiện đầy đủ.
+- Chọn số câu ở cuối trang để đổi section/passage; đáp án và highlight giữ nguyên khi đổi qua lại.
+- Kéo chuột chọn chữ để bôi vàng. Highlight được lưu cùng lượt đã nộp; lượt mới/làm lại bắt đầu trống.
+- Quay lại / Huỷ bài cần xác nhận trước khi bỏ lượt chưa nộp; huỷ không tạo record và không xoá các lượt đã nộp. Tải lại trang sẽ mất lượt chưa nộp.
+- Reading: bài đọc trái, câu hỏi phải, cuộn riêng. Mặc định đếm xuôi không giới hạn; có tuỳ chọn đếm ngược 60 phút, hết giờ hiện thời gian vượt mà không tự nộp.
+- Listening: chọn audio offline từ máy; không gửi audio lên mạng. Tên `T3-S1.mp3` … `T3-S4.mp3` tự gán theo section và tương tự các test khác. Nếu tên khác thì chọn từng file ở section đang làm. Vị trí nghe được giữ khi chuyển section trong phiên.
+- Chọn một đáp án, nhóm chọn hai/ba đáp án, điền từ, heading, ghép đoạn/nhân vật, kết câu và sơ đồ đều có điều khiển tương ứng. Chọn nhiều đáp án được chấm không phụ thuộc thứ tự và không tính trùng. Heading có thể chọn ngay trên đoạn đọc hoặc kéo từ ngân hàng đáp án.
+- Sau khi nộp: sai đỏ / đúng xanh. Chọn câu hoặc Xem giải thích để mở bottom sheet và cuộn đến bằng chứng nguồn. Giữ hình bản đồ gốc, bảng và chữ đậm/nghiêng; bố cục điều chỉnh cho trình duyệt, không mô phỏng phân trang Word.
 
-Nguồn: [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Free plan](https://supabase.com/pricing). Gói Free có thể tạm dừng project sau một tuần không hoạt động; khi đó khôi phục trong Dashboard để đồng bộ tiếp.
+## Đáp án và thiếu sót trong tài liệu nguồn
 
-Mất mạng hoặc kho dữ liệu chưa sẵn sàng: lượt mới giữ trong hàng chờ trên trình duyệt, không giả báo đã đồng bộ. Kết nối trở lại sẽ tự thử gửi lại; có nút **Đồng bộ lại** trong lịch sử. Mở lại trang cũng phục hồi hàng chờ. Retry dùng cùng ID nên không tạo bản sao; làm lại và nộp lần nữa tạo ID mới. Không xoá bộ nhớ trình duyệt trước khi các lượt chờ đã đồng bộ. Nếu trình duyệt không cho lưu, ứng dụng cảnh báo lượt chỉ đang ở bộ nhớ.
+**Reading Test 12 có đủ đề nhưng bảng key của file nguồn trống cả 40 câu.** Bài này vẫn làm/nộp/xem lại được, nhưng hiện “Chưa có đáp án nguồn”; không tính đáp án đã nhập là sai hoặc đưa điểm 0/40. Cần bổ sung key gốc để bật chấm tự động. Các test còn lại chấm đủ 40 câu.
+
+Reading Test 2–9 có phần chữa nguồn (Test 4 thiếu một lời giải riêng); Test 10 chỉ có lời giải riêng câu 1–6; Test 11 chưa có phần chữa chi tiết. Listening Test 3–9 có key và transcript nhưng chưa có lời giải riêng. Những câu không có chữa riêng hiển thị đáp án và đoạn nguồn liên quan. Các câu NOT GIVEN không xác định được bằng chứng cụ thể sẽ không tự đánh dấu một đoạn không liên quan.
+
+Các lỗi nguồn được ghi chú trên bài và trong [báo cáo nhập liệu](scripts/import-vol9-report.json):
+
+- Listening Test 3: nhãn cuối của ngân hàng A–G bị ghi D lần thứ hai; hiển thị G cho “unavailable”.
+- Listening Test 7: key câu 32–39 lệch thứ tự so với câu hỏi. Đối chiếu transcript cho đáp án: gift, publicity, reputation, machines, toppings, mistake, contact, shape.
+- Listening Test 8 câu 36: key ghi “glass”, transcript ghi “grass”; chấm “grass”.
+- Reading Test 2: khôi phục phương án F bị thiếu từ chính phần chữa 24–26.
+- Reading Test 5: khôi phục heading ix bị thiếu từ phần chữa câu 16.
+- Reading Test 11 câu 13: key ghi “Varnis”; chấp nhận thêm “varnished” theo passage.
+
+Các bản key ban đầu của test mới được giữ trong `sourceAnswerKey` để đối chiếu. Không tự tạo đáp án cho Reading Test 12.
 
 ## Chạy local
 
@@ -29,33 +43,15 @@ Node.js 24 trở lên:
 node server/server.mjs
 ```
 
-Mở http://127.0.0.1:8080 trực tiếp, không cần đăng nhập. Khi Supabase chưa cấu hình, máy chủ lưu lịch sử chung trong `.private/history.sqlite`. Các bảng account/lịch sử cũ được giữ nguyên; các lượt hợp lệ được sao chép sang lịch sử chung mà không mang theo username/account. Mật khẩu cũ không được đưa vào frontend hoặc Git. Khi cấu hình Supabase, giao diện ưu tiên kho chung trên Internet.
+Mở http://127.0.0.1:8080, không cần đăng nhập. Lịch sử local lưu ở `.private/history.sqlite`. Lịch sử account cũ được sao chép sang bảng chung, bỏ username trong record; không xoá bảng cũ. Tài khoản/mật khẩu cũ không đưa vào frontend hoặc Git.
 
-Bản tĩnh không cần Node:
+Bản tĩnh:
 
 ```sh
 python3 -m http.server 8080 --directory dist
 ```
 
-Mở http://localhost:8080. Dữ liệu lịch sử cũ của mỗi địa chỉ web/trình duyệt nằm riêng; phải mở đúng địa chỉ cũ để chuyển chúng lên kho chung.
-
-## Làm bài
-
-Menu Listening / Reading → Vol 9 → Test. Chọn bài chỉ mở màn hình chuẩn bị; bấm **Bắt đầu làm bài** mới chạy giờ. Quay lại / Huỷ bài cần xác nhận trước khi bỏ lượt chưa nộp; huỷ không tạo record và không xoá lượt đã nộp. Đáp án và highlight giữ khi đổi section/passage trong phiên; tải lại trang sẽ mất lượt chưa nộp. Kéo chuột chọn chữ để bôi vàng; mỗi lượt làm lại bắt đầu trống, highlight của lượt đã nộp vẫn giữ.
-
-### Listening
-
-Chọn bốn file `T1-S1.mp3` … `T1-S4.mp3` hoặc `T2-S1.mp3` … `T2-S4.mp3` từ máy. Audio không gửi lên server; từng section nhớ vị trí nghe trong phiên. Tên khác thì chọn từng file tại section tương ứng.
-
-Test 1: câu 1–17 điền từ; 18–20 kéo/chọn A–G trên sơ đồ gốc; 21–24 chọn một đáp án; 25–30 chọn hai đáp án, chấm không phụ thuộc thứ tự và không tính trùng; 31–40 điền một từ. Test 2: 1–10 và 31–40 điền từ; 11–15 và 21–24 chọn một đáp án; 16–20 kéo/chọn A–I trên lưu đồ; 25–30 ghép ý A–H.
-
-Sau khi nộp: transcript trái, câu hỏi phải, hai cột cuộn riêng. Xem giải thích mở bottom sheet và cuộn đến bằng chứng. Test 1 có lời giải riêng câu 1–20; các câu còn lại và Test 2 hiện đáp án/đoạn transcript nguồn, ghi rõ chưa có lời giải riêng.
-
-### Reading
-
-Reading Test 1 có ba passage (1–13, 14–26, 27–40), đủ 40 lời giải nguồn. Bài đọc trái, câu hỏi phải. Các dạng: TRUE/FALSE/NOT GIVEN, heading, ghép đoạn, điền từ và trắc nghiệm. Heading kéo/chọn được ngay trên đoạn đọc và đồng bộ với lựa chọn bên phải.
-
-Mặc định đếm xuôi không giới hạn; có tuỳ chọn đếm ngược 60 phút. Hết giờ hiện thời gian vượt, không tự nộp hay xoá đáp án. Sau khi nộp, sai đỏ / đúng xanh; bottom sheet hiển thị lời giải và đánh dấu đoạn đọc chứa đáp án. Highlight ở cả bài đọc và câu hỏi lưu theo lượt.
+Mở http://localhost:8080. Lịch sử của mỗi địa chỉ web/trình duyệt nằm riêng; xoá dữ liệu trang sẽ xoá lịch sử tại đó.
 
 ## Kiểm tra
 
@@ -63,26 +59,13 @@ Mặc định đếm xuôi không giới hạn; có tuỳ chọn đếm ngược
 node scripts/check.cjs
 node scripts/check-test2.cjs
 node scripts/check-reading.cjs
+node scripts/check-vol9.cjs
 node scripts/check-shared-history.cjs
 node server/check.mjs
 node server/browser-check.mjs
 ```
 
-Kiểm tra dùng dữ liệu tạm, không sửa lịch sử thật. Browser check yêu cầu Chrome trên macOS. Kiểm tra shared history mô phỏng REST API: hai bộ nhớ độc lập, chuyển lịch sử cũ, hàng chờ offline/reload, chống trùng, refresh đồng thời nộp, chuyển backend, phân trang và highlight. Kết nối Supabase thật cần kiểm tra sau khi cung cấp cấu hình/chạy SQL.
-
-## GitHub Pages
-
-Mã nguồn trên `main`; trang triển khai từ `gh-pages` / root:
-
-```sh
-git add dist scripts server supabase README.md
-git commit -m 'Update EchoPrep'
-git subtree split --prefix dist -b pages-update
-git push origin main pages-update:gh-pages
-gh api --method POST repos/FlogDinh/echoprep/pages/builds
-```
-
-Đổi tên branch tạm `pages-update` cho các lần sau. Kiểm tra trạng thái triển khai bằng `gh api repos/FlogDinh/echoprep/pages/builds/latest`.
+Dùng dữ liệu tạm, không sửa lịch sử thật. Browser check yêu cầu Chrome trên macOS: kiểm tra đủ 21 test qua điều khiển thực, 40 câu mỗi bài, giữ lựa chọn khi đổi passage/section, tải ảnh, chấm key, chữa bài, lịch sử, highlight và trạng thái chưa chấm của Reading 12.
 
 ## Nhập lại đề nguồn
 
@@ -90,6 +73,20 @@ gh api --method POST repos/FlogDinh/echoprep/pages/builds
 python3 scripts/import-test.py
 python3 scripts/import-test2.py
 python3 scripts/import-reading.py
+python3 scripts/import-vol9.py
 ```
 
-Listening nguồn: `../Reference/VOL 9 LISTENING/LIS TEST 1/` và Test 2 tương ứng. Reading nguồn: `Reference/VOL 9 READING/[VOL 9] Reading Test 1.docx`. Không sửa file nguồn; DOCX/audio không đưa vào Git. Nội dung/chữ đậm/nghiêng/sơ đồ được giữ, bố cục điều chỉnh cho web và màn hình nhỏ; không mô phỏng phân trang Word. Đây là ứng dụng tự luyện, đáp án nằm trong dữ liệu frontend.
+Test 1–2 dùng importer cũ; Test Listening 3–9 và Reading 2–12 dùng `import-vol9.py`. Thư mục nguồn hiện tại: `Reference/VOL 9 LISTENING/` và `Reference/VOL 9 READING/`. Listening Test 9 có key/transcript ở file riêng. Reading Test 11 lấy đề từ `VOL 9 TEST 11.docx`, key từ `[VOL 9] Reading Test 11.docx`; Reading 12 ghép Passage 1 của file `[VOL 9] Reading Test 12.docx` với Passage 2–3 của `VOL 9 TEST 12.docx`. Importer không sửa DOCX gốc. DOCX và audio không đưa vào Git.
+
+## GitHub Pages
+
+Mã nguồn `main`; website từ `gh-pages` / root. Sau khi commit thay đổi:
+
+```sh
+git subtree split --prefix dist -b pages-update
+git push origin main pages-update:gh-pages
+gh api --method POST repos/FlogDinh/echoprep/pages/builds
+gh api repos/FlogDinh/echoprep/pages/builds/latest
+```
+
+Đổi tên branch tạm cho mỗi lần triển khai. Đây là ứng dụng tự luyện; đáp án nằm trong dữ liệu frontend.

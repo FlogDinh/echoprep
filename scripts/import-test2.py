@@ -1,5 +1,5 @@
 import pathlib,zipfile,xml.etree.ElementTree as E,json,re,html
-root=pathlib.Path(__file__).resolve().parents[1];src=root.parent/'Reference/VOL 9 LISTENING/LIS TEST 2/[VOL 9] Listening Test 2.docx'
+root=pathlib.Path(__file__).resolve().parents[1];src=root/'Reference/VOL 9 LISTENING/LIS TEST 2/[VOL 9] Listening Test 2.docx'
 z=zipfile.ZipFile(src);ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'};doc=E.fromstring(z.read('word/document.xml'))
 def txt(p):return ''.join(x.text or '' for x in p.findall('.//w:t',ns))
 def fmt(p):
