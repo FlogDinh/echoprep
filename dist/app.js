@@ -10,7 +10,7 @@ const questionSection=n=>groups().findIndex(([a,b])=>n>=a&&n<=b)+1;
 let activeTest=1, inLibrary=false, pendingTest=null, pendingRetry=null;
 const choiceSize=q=>q.size||2;
 const questionBase=n=>{const p=TEST.pairs.find(p=>n>=p.n&&n<p.n+choiceSize(p));return p?p.n:n};
-let section=1, answers={}, submitted=false, result=null, started=Date.now(), elapsed=0, chosen='', sources={}, positions={};
+let section=1, audioSection=1, answers={}, submitted=false, result=null, started=Date.now(), elapsed=0, chosen='', sources={}, positions={};
 const audioByTest={1:sources};
 let highlights={};
 let selectedQuestion=null;
@@ -82,15 +82,33 @@ function render(){
  }
  renderReview();
  EchoHighlight.apply($('paper'),highlights[section]||{});
- $('finish').textContent=TEST.hasAnswerKey===false?'Lưu bài làm':'Chấm kết quả';$('audio-title').textContent=`Audio · Section ${section}`;$('submit').disabled=submitted||!attemptStarted;$('submit').hidden=!attemptStarted&&!submitted;$('abort-attempt').hidden=submitted;
+ $('finish').textContent=TEST.hasAnswerKey===false?'Lưu bài làm':'Chấm kết quả';renderAudioStatus();$('submit').disabled=submitted||!attemptStarted;$('submit').hidden=!attemptStarted&&!submitted;$('abort-attempt').hidden=submitted;
  if(result)document.querySelectorAll('[data-q]').forEach(el=>el.classList.add(result.rows[el.dataset.q-1].status));
 }
-function change(n){chosen='';selectedQuestion=null;$('explanation-sheet').hidden=true;positions[section]=audio.currentTime;audio.pause();section=n;render();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;loadAudio();}
-function loadAudio(){if(sources[section]){audio.src=sources[section];audio.onloadedmetadata=()=>{audio.currentTime=positions[section]||0;audio.playbackRate=+$('speed').value};$('audio-status').textContent=`Đã chọn audio cho Section ${section}.`}else {audio.removeAttribute('src');audio.load();$('audio-status').textContent=`Chưa chọn audio Section ${section}. Chọn file T${activeTest}-S${section}.mp3 từ máy.`}}
+function change(n){chosen='';selectedQuestion=null;$('explanation-sheet').hidden=true;section=n;render();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;}
+function rememberAudioPosition(){
+ if(activeModule==='listening'&&sources[audioSection]&&audio.getAttribute('src')===sources[audioSection]&&audio.readyState>=1&&Number.isFinite(audio.currentTime))positions[audioSection]=audio.currentTime;
+}
+function unloadAudio(){audio.pause();audio.onloadedmetadata=null;audio.removeAttribute('src');audio.load();}
+function renderAudioStatus(){
+ $('audio-title').textContent=`Audio · Section ${audioSection}`;$('audio-section').value=String(audioSection);
+ $('audio-viewing').hidden=section===audioSection||activeModule!=='listening';$('audio-viewing').textContent=`Đang xem câu hỏi Section ${section}`;
+ $('audio-status').textContent=sources[audioSection]?`Audio Section ${audioSection} đã sẵn sàng. Chuyển câu hỏi không làm gián đoạn bài nghe.`:`Chưa chọn audio Section ${audioSection}. Chọn file T${activeTest}-S${audioSection}.mp3 từ máy.`;
+}
+function loadAudio(){
+ if(activeModule!=='listening'){if(audio.hasAttribute('src'))unloadAudio();return;}
+ const source=sources[audioSection];renderAudioStatus();
+ // Re-rendering questions/history must never reload or seek the active recording.
+ if(source&&audio.getAttribute('src')===source)return;
+ if(!source){if(audio.hasAttribute('src'))unloadAudio();return;}
+ audio.pause();audio.src=source;
+ audio.onloadedmetadata=()=>{audio.currentTime=Math.min(positions[audioSection]||0,Number.isFinite(audio.duration)?audio.duration:Infinity);audio.playbackRate=+$('speed').value;};
+}
+$('audio-section').onchange=()=>{rememberAudioPosition();audio.pause();audioSection=+$('audio-section').value;loadAudio();};
 $('questions').addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;const n=+b.dataset.jump,s=questionSection(n);if(s!==section)change(s);const id=questionBase(n);const el=$('q'+id);el?.scrollIntoView({behavior:'smooth',block:'center'});if(el?.matches('input,select'))el.focus({preventScroll:true});if(submitted)showExplanation(n)});
-$('files').addEventListener('change',e=>{const files=[...e.target.files];let assigned=0;files.forEach(f=>{const match=f.name.match(/(?:T(\d+)[-_ ]?)?S([1-4])\b/i);if(match?.[1]&&+match[1]!==activeTest)return;let n=match?+match[2]:files.length===1?section:null;if(!n)return;if(sources[n])URL.revokeObjectURL(sources[n]);sources[n]=URL.createObjectURL(f);assigned++});loadAudio();if(!assigned)$('audio-status').textContent=`Chọn từng file để gán cho section hiện tại, hoặc dùng tên T${activeTest}-S1.mp3 … T${activeTest}-S4.mp3.`});
+$('files').addEventListener('change',e=>{const files=[...e.target.files];let assigned=0;files.forEach(f=>{const match=f.name.match(/(?:T(\d+)[-_ ]?)?S([1-4])\b/i);if(match?.[1]&&+match[1]!==activeTest)return;let n=match?+match[2]:files.length===1?audioSection:null;if(!n)return;if(sources[n])URL.revokeObjectURL(sources[n]);positions[n]=0;sources[n]=URL.createObjectURL(f);assigned++});loadAudio();if(!assigned)$('audio-status').textContent=`Chọn từng file để gán cho section đang chọn trên thanh nghe, hoặc dùng tên T${activeTest}-S1.mp3 … T${activeTest}-S4.mp3.`});
 $('speed').onchange=()=>audio.playbackRate=+$('speed').value;$('back5').onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-5);$('forward5').onclick=()=>{if(Number.isFinite(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+5)};
-audio.onerror=()=>$('audio-status').textContent='Không phát được file này. Hãy chọn lại file MP3 cho section hiện tại.';
+audio.onerror=()=>$('audio-status').textContent=`Không phát được audio Section ${audioSection}. Hãy chọn lại file nghe cho section này.`;
 $('submit').onclick=()=>{if(!attemptStarted||submitted)return;clock();if(timeLimitPending)return;$('confirm-text').textContent=`Bạn đã trả lời ${Object.values(answers).filter(Boolean).length}/40 câu. ${TEST.hasAnswerKey===false?'Lưu bài làm để xem lại; chưa chấm đúng/sai do chưa có đáp án nguồn.':'Nộp bài để xem đúng, sai và đáp án.'}`;$('confirm').showModal()};$('cancel').onclick=()=>$('confirm').close();
 function explanationButton(n){return `<button class="explanation-button" data-explain="${n}">Xem giải thích · Câu ${n}</button>`}
 function renderReview(){
@@ -133,7 +151,7 @@ function showHistory(){
  $('source-notes').hidden=true;
  $('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');
  $('library').hidden=true;
- document.body.classList.remove('review-mode','reading-mode');$('review-shell').hidden=true;$('review-toolbar').hidden=true;positions[section]=audio.currentTime;audio.pause();$('paper').hidden=true;$('results').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('history').hidden=false;
+ document.body.classList.remove('review-mode','reading-mode');$('review-shell').hidden=true;$('review-toolbar').hidden=true;rememberAudioPosition();audio.pause();$('paper').hidden=true;$('results').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('history').hidden=false;
  renderHistory();refreshHistory();
 }
 
@@ -165,19 +183,19 @@ function renderHistory(){
  $('history-back').onclick=reviewBackup?returnCurrent:inLibrary?showLibrary:showExam;
  $('history').onclick=e=>{const view=e.target.closest('[data-history-view]'),retry=e.target.closest('[data-history-retry]');if(retry){const r=getHistory().find(x=>x.id===retry.dataset.historyRetry);pendingRetry={id:r?.testId||1,module:r?.module||'listening'};$('restart-dialog').showModal();return}if(view)openAttemptReview(view.dataset.historyView);};
 }
-function openAttemptReview(id){const r=getHistory().find(x=>x.id===id);if(!r)return;if(!reviewBackup)reviewBackup={activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers:{...answers},submitted,result,started,elapsed,reviewingId,storageNotice};audioByTest[activeModule+':'+activeTest]=sources;activeModule=r.module||'listening';timerMode=r.timerMode||'elapsed';activeTest=r.testId||1;sources=audioByTest[activeModule+':'+activeTest]||{};positions={};TEST=catalog[activeModule][activeTest];highlights=JSON.parse(JSON.stringify(r.highlights||{}));answers={...r.answers};result=JSON.parse(JSON.stringify(r.result));elapsed=r.elapsed;submitted=true;attemptStarted=true;reviewingId=r.id;storageNotice='';section=1;showExam();
+function openAttemptReview(id){const r=getHistory().find(x=>x.id===id);if(!r)return;rememberAudioPosition();audio.pause();if(!reviewBackup)reviewBackup={activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,audioSection,answers:{...answers},submitted,result,started,elapsed,reviewingId,storageNotice};unloadAudio();audioByTest[activeModule+':'+activeTest]=sources;activeModule=r.module||'listening';timerMode=r.timerMode||'elapsed';activeTest=r.testId||1;sources=audioByTest[activeModule+':'+activeTest]||{};positions={};audioSection=1;TEST=catalog[activeModule][activeTest];highlights=JSON.parse(JSON.stringify(r.highlights||{}));answers={...r.answers};result=JSON.parse(JSON.stringify(r.result));elapsed=r.elapsed;submitted=true;attemptStarted=true;reviewingId=r.id;storageNotice='';section=1;showExam();
 }
-function returnCurrent(){if(reviewBackup){({activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers,submitted,result,started,elapsed,reviewingId,storageNotice}=reviewBackup);reviewBackup=null;TEST=catalog[activeModule][activeTest];}if(inLibrary)showLibrary();else{showExam();loadAudio();}}
+function returnCurrent(){if(reviewBackup){unloadAudio();({activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,audioSection,answers,submitted,result,started,elapsed,reviewingId,storageNotice}=reviewBackup);reviewBackup=null;TEST=catalog[activeModule][activeTest];}if(inLibrary)showLibrary();else{showExam();loadAudio();}}
 $('history-open').onclick=showHistory;
 async function finishAttempt(fromTimeLimit=false){
  if(submitted||!attemptStarted||(fromTimeLimit&&!timeLimitPending))return;
  if(!fromTimeLimit){clock();if(timeLimitPending)return;}
  $('confirm').close();$('time-limit-dialog').close();timeLimitPending=false;submitted=true;
- positions[section]=audio.currentTime;audio.pause();result=EchoGrade.grade(answers,TEST.answers,TEST.grading);await saveAttempt();
+ rememberAudioPosition();audio.pause();result=EchoGrade.grade(answers,TEST.answers,TEST.grading);await saveAttempt();
  section=1;selectedQuestion=null;showExam();
 }
 $('finish').onclick=()=>finishAttempt();
-function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';audio.pause();highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
+function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';unloadAudio();audioSection=1;highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
 function startTest(selection){const id=typeof selection==='object'?selection.id:selection,nextModule=typeof selection==='object'?selection.module:activeModule;clearAttempt();if(activeTest!==id||activeModule!==nextModule){audioByTest[activeModule+':'+activeTest]=sources;sources=audioByTest[nextModule+':'+id]||{};}activeModule=nextModule;timerMode='elapsed';activeTest=id;TEST=catalog[activeModule][id];inLibrary=false;pendingRetry=null;pendingTest=null;showExam();clock();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;window.scrollTo({top:0});}
 function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
 function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else if(testId)startTest(testId);else showLibrary();}
@@ -187,7 +205,7 @@ function captureKeywords(root,key){if(!attemptStarted||submitted||inLibrary)retu
 $('paper').addEventListener('mouseup',()=>captureKeywords($('paper'),section));
 $('transcript-body').addEventListener('mouseup',()=>{if(activeModule==='reading')captureKeywords($('transcript-body'),'passage:'+section)});
 $('begin-attempt').onclick=()=>{if(attemptStarted||submitted||inLibrary)return;timerMode=activeModule==='reading'?$('time-mode').value:'elapsed';attemptStarted=true;started=Date.now();elapsed=0;render();clock();};
-audio.addEventListener('play',()=>{if(!attemptStarted&&!submitted)audio.pause();});
+audio.addEventListener('play',()=>{if(activeModule!=='listening'||inLibrary||(!attemptStarted&&!submitted))audio.pause();});
 $('back-library').onclick=()=>requestLeave();$('abort-attempt').onclick=()=>requestLeave();$('abort-continue').onclick=()=>{$('abort-dialog').close();pendingTest=null;};$('abort-confirm').onclick=()=>{const id=pendingTest;$('abort-dialog').close();clearAttempt();pendingTest=null;if(id)startTest(id);else showLibrary();};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-start-test]');if(b){e.preventDefault();requestLeave({id:+b.dataset.startTest,module:b.dataset.module||'listening'})}});
 $('restart-cancel').onclick=()=>{$('restart-dialog').close();pendingRetry=null;};$('restart-confirm').onclick=()=>{$('restart-dialog').close();startTest(pendingRetry||activeTest);};
