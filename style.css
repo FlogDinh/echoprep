@@ -23,3 +23,15 @@ mark.keyword-highlight{background:#ffeb69;color:inherit;border-radius:2px;paddin
 .test-active .test-attempt-count{display:block;margin:6px 0 0;font-size:12px;font-weight:400;line-height:1.4;color:#64748b}
 
 .test-active .test-latest-result{display:block;margin:4px 0 0;font-size:12px;font-weight:600;line-height:1.4;color:#334155}
+
+#test-history{background:white;border:1px solid var(--line);border-radius:12px;margin:24px 0;padding:24px;min-width:0}
+.test-history-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.test-history-heading h2{font-size:20px;line-height:1.4;margin:0 0 8px}.test-history-heading p{margin:0;color:#64748b;font-size:14px;line-height:1.6}
+.test-history-heading button{flex-shrink:0;font-size:13px;padding:8px 12px}
+.test-history-table{min-width:740px;font-size:14px}.test-history-table th,.test-history-table td{padding:14px 12px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.test-history-table thead{background:#f5f7fc}.test-history-table thead th{font-size:13px;font-weight:600;color:#475569}.test-history-table tbody th{font-weight:500;color:#64748b}
+.test-history-table tbody tr:hover{background:#f8faff}.test-history-table td span{color:#64748b}.test-history-table .test-history-total{background:#f0f6ff;color:#1d4ed8}.test-history-total strong{font-size:18px}
+.test-history-table button{font-size:13px;padding:7px 10px;color:#1d4ed8;border-color:#c7d8ff;background:white}.test-history-table button:hover{background:#edf3ff}
+.test-history-ungraded{font-size:13px}.test-history-empty{background:#f8faff;border:1px dashed #dce3ed;border-radius:8px;padding:24px;color:#64748b}.test-history-empty p{margin:0;line-height:1.7}.test-history-empty p+p{margin-top:6px;font-size:14px}.test-history-empty strong{color:#334155}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:700px){#test-history{padding:18px 14px;margin:18px 0}.test-history-heading{gap:10px}.test-history-heading h2{font-size:18px}.test-history-heading p{font-size:12px}.test-history-heading button{padding:7px 9px}.test-history-empty{padding:16px}.test-history-table th,.test-history-table td{padding:12px 10px}}
