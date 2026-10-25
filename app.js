@@ -174,21 +174,30 @@ setInterval(()=>{if(!document.hidden&&!$('history').hidden)refreshHistory()},300
 function renderMenu(){
  $('module-menu').innerHTML=['listening','reading'].map(m=>`<button data-module-menu="${m}" class="${m===activeModule?'module-active':''}">${m==='reading'?'Reading':'Listening'}</button>`).join('');
  document.querySelector('aside h2').textContent=moduleName()+' - Vol 9';
- const cards=Object.keys(catalog[activeModule]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-start-test="${id}"><span>${moduleName()} Test ${id}</span><small class="test-attempt-count">Đã làm 0 lần</small></a>`).join('');$('test-menu').innerHTML=cards;
+ const cards=Object.keys(catalog[activeModule]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-start-test="${id}"><span>${moduleName()} Test ${id}</span><small class="test-attempt-count">Đã làm 0 lần</small><small class="test-latest-result" hidden></small></a>`).join('');$('test-menu').innerHTML=cards;
  $('library').innerHTML=`<div class="eyebrow">${moduleName().toUpperCase()} · VOL 9</div><h1>Chọn bài luyện ${activeModule==='reading'?'đọc':'nghe'}</h1><div class="library-tests">${cards}</div>`;
  document.querySelector('.test-heading .eyebrow').textContent='IELTS '+moduleName().toUpperCase();
  document.querySelector('.local-label').textContent=activeModule==='reading'?'Kéo chuột chọn từ để bôi vàng trong bài đọc và câu hỏi.':'Audio được phát trực tiếp từ máy của bạn.';
  updateTestCounts();
 }
 function updateTestCounts(){
- const counts=new Map();
+ const stats=new Map();
  for(const record of getHistory()){
   const key=`${record.module||'listening'}:${record.vol||9}:${record.testId||1}`;
-  counts.set(key,(counts.get(key)||0)+1);
+  const stat=stats.get(key)||{count:0,latest:null};
+  stat.count++;
+  if(!stat.latest||Date.parse(record.submittedAt)>=Date.parse(stat.latest.submittedAt))stat.latest=record;
+  stats.set(key,stat);
  }
  document.querySelectorAll('[data-start-test]').forEach(card=>{
+  const stat=stats.get(`${card.dataset.module||'listening'}:9:${card.dataset.startTest}`);
   const label=card.querySelector('.test-attempt-count');
-  if(label)label.textContent=`Đã làm ${counts.get(`${card.dataset.module||'listening'}:9:${card.dataset.startTest}`)||0} lần`;
+  if(label)label.textContent=`Đã làm ${stat?.count||0} lần`;
+  const latest=card.querySelector('.test-latest-result');
+  if(latest){
+   latest.hidden=!stat?.latest;
+   latest.textContent=stat?.latest?(stat.latest.result.gradedTotal===0?'Gần nhất: Chưa chấm':`Gần nhất: ${stat.latest.result.correct}/40 câu đúng`):'';
+  }
  });
 }
 $('module-menu').onclick=e=>{const b=e.target.closest('[data-module-menu]');if(b&&b.dataset.moduleMenu!==activeModule)requestLeave({id:1,module:b.dataset.moduleMenu});};
