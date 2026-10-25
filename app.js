@@ -20,7 +20,7 @@ const HISTORY_KEY=EchoHistory.keys.LEGACY;
 let browserStorage;try{browserStorage=localStorage}catch{}
 const historyStore=EchoHistory.create({storage:browserStorage,localAPI:window.ECHO_LOCAL_HISTORY===true,onChange:updateHistoryStatus});
 function getHistory(){return historyStore.list()}
-function updateHistoryStatus(){if(!$('history').hidden)renderHistory();}
+function updateHistoryStatus(){updateTestCounts();if(!$('history').hidden)renderHistory();}
 async function refreshHistory(){await historyStore.sync();updateHistoryStatus();}
 async function saveAttempt(){const record=pendingSave||{highlights:JSON.parse(JSON.stringify(highlights)),module:activeModule,vol:9,timerMode,testId:activeTest,id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random(),test:`${moduleName()} - Vol 9 · Test ${activeTest}`,submittedAt:new Date().toISOString(),elapsed,answers:{...answers},result:JSON.parse(JSON.stringify(result))};
  try{const synced=await historyStore.save(record);pendingSave=synced?null:record;storageNotice=historyStore.status().message;}catch{pendingSave=record;storageNotice='Chưa lưu được lượt này. Hãy thử lưu lại trước khi đóng trang.'}}
@@ -174,10 +174,22 @@ setInterval(()=>{if(!document.hidden&&!$('history').hidden)refreshHistory()},300
 function renderMenu(){
  $('module-menu').innerHTML=['listening','reading'].map(m=>`<button data-module-menu="${m}" class="${m===activeModule?'module-active':''}">${m==='reading'?'Reading':'Listening'}</button>`).join('');
  document.querySelector('aside h2').textContent=moduleName()+' - Vol 9';
- const cards=Object.keys(catalog[activeModule]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-start-test="${id}">${moduleName()} Test ${id}</a>`).join('');$('test-menu').innerHTML=cards;
+ const cards=Object.keys(catalog[activeModule]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-start-test="${id}"><span>${moduleName()} Test ${id}</span><small class="test-attempt-count">Đã làm 0 lần</small></a>`).join('');$('test-menu').innerHTML=cards;
  $('library').innerHTML=`<div class="eyebrow">${moduleName().toUpperCase()} · VOL 9</div><h1>Chọn bài luyện ${activeModule==='reading'?'đọc':'nghe'}</h1><div class="library-tests">${cards}</div>`;
  document.querySelector('.test-heading .eyebrow').textContent='IELTS '+moduleName().toUpperCase();
  document.querySelector('.local-label').textContent=activeModule==='reading'?'Kéo chuột chọn từ để bôi vàng trong bài đọc và câu hỏi.':'Audio được phát trực tiếp từ máy của bạn.';
+ updateTestCounts();
+}
+function updateTestCounts(){
+ const counts=new Map();
+ for(const record of getHistory()){
+  const key=`${record.module||'listening'}:${record.vol||9}:${record.testId||1}`;
+  counts.set(key,(counts.get(key)||0)+1);
+ }
+ document.querySelectorAll('[data-start-test]').forEach(card=>{
+  const label=card.querySelector('.test-attempt-count');
+  if(label)label.textContent=`Đã làm ${counts.get(`${card.dataset.module||'listening'}:9:${card.dataset.startTest}`)||0} lần`;
+ });
 }
 $('module-menu').onclick=e=>{const b=e.target.closest('[data-module-menu]');if(b&&b.dataset.moduleMenu!==activeModule)requestLeave({id:1,module:b.dataset.moduleMenu});};
 function renderPassage(){
