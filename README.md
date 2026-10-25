@@ -8,6 +8,8 @@ Vol 9 hiện có **Listening Test 1–9** và **Reading Test 1–12**. Mỗi tes
 
 Không cần đăng nhập; không có đăng ký, phân quyền theo account, định danh thiết bị hoặc cấu hình Supabase. Các lượt đã lưu trước đây vẫn được giữ. Mỗi lần nộp tạo một lượt riêng, gồm đáp án, thời lượng, kết quả và highlight; có thể xem lại hoặc làm lại. Mỗi test trong thư viện và menu hiển thị “Đã làm X lần” cùng kết quả lượt nộp gần nhất (ví dụ “Gần nhất: 26/40 câu đúng”), tính riêng theo môn/Vol/Test. Không tính lượt đang làm hoặc đã huỷ; bài chưa có key hiện “Gần nhất: Chưa chấm”. Bản GitHub Pages lưu lịch sử bằng bộ nhớ trình duyệt; không có đồng bộ giữa các máy. Bản local dùng SQLite khi chạy máy chủ bên dưới. Không cần cấu hình dịch vụ ngoài để luyện bài.
 
+Khi chọn từng test, bảng **Lịch sử · Reading/Listening Test N** xuất hiện ngay dưới phần bắt đầu. Bảng chỉ liệt kê các lượt của đúng môn/Vol/Test đó, mới nhất trước: ngày nộp, thời lượng, tổng câu đúng và số câu đúng từng Passage (Reading) hoặc Section (Listening). Điểm được đọc từ kết quả đã lưu, áp dụng cả các lượt cũ. Chọn **Xem lại** để mở đáp án, highlight và chữa bài của đúng lượt; trở về vẫn giữ test đang chọn. Bài chưa có key hiển thị “Chưa chấm”.
+
 ## Làm bài và chữa bài
 
 - Chọn số câu ở cuối trang để đổi section/passage; đáp án và highlight giữ nguyên khi đổi qua lại.

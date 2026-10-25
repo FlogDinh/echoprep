@@ -20,7 +20,7 @@ const HISTORY_KEY=EchoHistory.keys.LEGACY;
 let browserStorage;try{browserStorage=localStorage}catch{}
 const historyStore=EchoHistory.create({storage:browserStorage,localAPI:window.ECHO_LOCAL_HISTORY===true,onChange:updateHistoryStatus});
 function getHistory(){return historyStore.list()}
-function updateHistoryStatus(){updateTestCounts();if(!$('history').hidden)renderHistory();}
+function updateHistoryStatus(){updateTestCounts();renderTestHistory();if(!$('history').hidden)renderHistory();}
 async function refreshHistory(){await historyStore.sync();updateHistoryStatus();}
 async function saveAttempt(){const record=pendingSave||{highlights:JSON.parse(JSON.stringify(highlights)),module:activeModule,vol:9,timerMode,testId:activeTest,id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random(),test:`${moduleName()} - Vol 9 · Test ${activeTest}`,submittedAt:new Date().toISOString(),elapsed,answers:{...answers},result:JSON.parse(JSON.stringify(result))};
  try{const synced=await historyStore.save(record);pendingSave=synced?null:record;storageNotice=historyStore.status().message;}catch{pendingSave=record;storageNotice='Chưa lưu được lượt này. Hãy thử lưu lại trước khi đóng trang.'}}
@@ -59,7 +59,7 @@ function options(q,multi=false){return `<div class="choice-block" id="q${q.n}"><
 function updateTestSelection(){document.querySelectorAll('[data-start-test]').forEach(el=>{const selected=!inLibrary&&+el.dataset.startTest===activeTest&&(el.dataset.module||'listening')===activeModule;el.classList.toggle('test-selected',selected);if(el.closest('aside')){el.style.background=selected?'#e3ecff':'#ffffff';el.style.color=selected?'#1d4ed8':'#64748b';el.style.borderColor=selected?'#8eaeff':'#dce3ed';el.style.fontWeight=selected?'700':'500';el.style.boxShadow=selected?'inset 3px 0 0 #1d4ed8':'none';}if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});}
 function render(){
  renderMenu();updateTestSelection();
- const ready=!attemptStarted&&!submitted&&!inLibrary;$('start-panel').hidden=!ready;$('review-shell').hidden=ready;$('paper').hidden=ready;document.body.classList.toggle('ready-mode',ready);document.querySelector('.audio-player').hidden=ready;$('questions').hidden=ready;
+ const ready=!attemptStarted&&!submitted&&!inLibrary;$('start-panel').hidden=!ready;$('review-shell').hidden=ready;$('paper').hidden=ready;document.body.classList.toggle('ready-mode',ready);document.querySelector('.audio-player').hidden=ready;$('questions').hidden=ready;renderTestHistory();
  $('source-notes').innerHTML=(TEST.sourceNotes||[]).map(t=>'<p>'+esc(t)+'</p>').join('');$('source-notes').hidden=!(TEST.sourceNotes||[]).length;
  $('explanation-sheet').hidden=true;document.body.classList.toggle('reading-mode',activeModule==='reading'&&!ready);$('start-description').textContent=activeModule==='reading'?'Chọn chế độ thời gian, rồi bắt đầu đọc và trả lời.':'Chọn file nghe khi sẵn sàng, rồi bắt đầu làm bài.';$('time-mode-label').hidden=activeModule!=='reading';$('time-mode').value=timerMode;
  let body=TEST.sections[section-1].html;
@@ -131,16 +131,41 @@ function renderResults(){
 }
 function showHistory(){
  $('source-notes').hidden=true;
- $('start-panel').hidden=true;document.body.classList.remove('ready-mode');
+ $('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');
  $('library').hidden=true;
  document.body.classList.remove('review-mode','reading-mode');$('review-shell').hidden=true;$('review-toolbar').hidden=true;positions[section]=audio.currentTime;audio.pause();$('paper').hidden=true;$('results').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('history').hidden=false;
  renderHistory();refreshHistory();
 }
+
+function renderTestHistory(){
+ const panel=$('test-history');
+ panel.hidden=$('start-panel').hidden||!$('history').hidden||inLibrary;
+ if(panel.hidden)return;
+ const records=getHistory().filter(r=>(r.module||'listening')===activeModule&&+(r.vol||9)===9&&+(r.testId||1)===activeTest)
+  .sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt)||b.id.localeCompare(a.id));
+ const title=`${moduleName()} Test ${activeTest}`,part=activeModule==='reading'?'Passage':'Section',ranges=groups();
+ const date=new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'medium',timeZone:'Asia/Ho_Chi_Minh'});
+ // Read the saved grading snapshot, so existing attempts need no migration or regrading.
+ const score=(record,first=1,last=40)=>{
+  const rows=record.result.rows.filter(row=>row.n>=first&&row.n<=last);
+  if(record.result.gradedTotal===0||rows.some(row=>row.status==='unchecked'))return '<span class="test-history-ungraded">Chưa chấm</span>';
+  return `<strong>${rows.filter(row=>row.status==='correct').length}</strong><span>/${last-first+1}</span>`;
+ };
+ panel.innerHTML=`<div class="test-history-heading"><div><h2 id="test-history-title">Lịch sử · ${title}</h2><p>${records.length?`${records.length} lượt đã nộp · Mới nhất ở trên cùng`:'Các lượt đã nộp của bài này sẽ xuất hiện tại đây.'}</p></div><button id="test-history-refresh">Làm mới</button></div>${records.length?`
+  <div class="table-scroll"><table class="test-history-table"><caption class="sr-only">Kết quả từng lượt làm ${title}</caption><thead><tr><th scope="col">Lượt</th><th scope="col">Thời gian nộp</th><th scope="col">Thời gian làm</th><th scope="col">Tổng đúng</th>${ranges.map((_,i)=>`<th scope="col">${part} ${i+1}</th>`).join('')}<th scope="col">Bài làm</th></tr></thead>
+  <tbody>${records.map((r,i)=>`<tr><th scope="row">#${records.length-i}</th><td><time datetime="${esc(r.submittedAt)}">${esc(date.format(new Date(r.submittedAt)))}</time></td><td>${duration(r.elapsed)}</td><td class="test-history-total">${score(r)}</td>${ranges.map(([first,last])=>`<td class="test-history-score">${score(r,first,last)}</td>`).join('')}<td><button data-test-history-view="${esc(r.id)}" aria-label="Xem lại ${title}, lượt ${records.length-i}">Xem lại</button></td></tr>`).join('')}</tbody></table></div>`:
+  `<div class="test-history-empty"><p>Chưa có lượt làm nào cho <strong>${title}</strong>.</p><p>Bấm Bắt đầu làm bài và nộp bài để lưu kết quả đầu tiên.</p></div>`}`;
+ $('test-history-refresh').onclick=refreshHistory;
+ panel.onclick=event=>{const button=event.target.closest('[data-test-history-view]');if(button)openAttemptReview(button.dataset.testHistoryView);};
+}
+
 function renderHistory(){
  const records=getHistory().filter(r=>(r.module||'listening')===activeModule).slice().reverse();$('history').innerHTML=`<div class="history-heading"><div><div class="eyebrow">${moduleName().toUpperCase()} · VOL 9</div><h1>Lịch sử làm bài</h1></div><button id="history-refresh">Làm mới</button><button id="history-back">${reviewBackup?'Trở về lượt hiện tại':'Trở về bài làm'}</button></div><p class="history-note">Mỗi lần nộp là một lượt riêng. Có thể xem lại đáp án hoặc bắt đầu một lượt mới.</p>${records.length?`<div class="table-scroll"><table class="history-table"><thead><tr><th>Bài / Lượt</th><th>Thời gian nộp</th><th>Thời gian làm</th><th>Tổng câu</th><th>Đúng</th><th>Sai</th><th>Bỏ qua</th><th>Tỉ lệ đúng</th><th>Thao tác</th></tr></thead><tbody>${records.map((r,i)=>`<tr><td><strong>${esc(r.test)}</strong><small>Lượt ${records.length-i}</small></td><td>${esc(new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'medium',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(r.submittedAt)))}</td><td>${duration(r.elapsed)}</td><td>40</td><td class="score-correct">${r.result.gradedTotal===0?'Chưa chấm':r.result.correct}</td><td class="score-wrong">${r.result.gradedTotal===0?'—':r.result.wrong}</td><td>${r.result.blank}</td><td>${r.result.gradedTotal===0?'—':r.result.correct/40*100+'%'}<div class="progress"><i style="width:${r.result.correct/40*100}%"></i></div></td><td><div class="history-actions"><button data-history-view="${esc(r.id)}">Xem lại</button><button data-history-retry="${esc(r.id)}">Làm lại</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="history-empty"><h2>Chưa có lượt làm nào</h2><p>Nộp ${moduleName()} Test 1 để lưu kết quả đầu tiên.</p></div>'}`;
  $('history-refresh').onclick=refreshHistory;
  $('history-back').onclick=reviewBackup?returnCurrent:inLibrary?showLibrary:showExam;
- $('history').onclick=e=>{const view=e.target.closest('[data-history-view]'),retry=e.target.closest('[data-history-retry]');if(retry){const r=getHistory().find(x=>x.id===retry.dataset.historyRetry);pendingRetry={id:r?.testId||1,module:r?.module||'listening'};$('restart-dialog').showModal();return}if(view){const r=getHistory().find(x=>x.id===view.dataset.historyView);if(!r)return;if(!reviewBackup)reviewBackup={activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers:{...answers},submitted,result,started,elapsed,reviewingId,storageNotice};audioByTest[activeModule+':'+activeTest]=sources;activeModule=r.module||'listening';timerMode=r.timerMode||'elapsed';activeTest=r.testId||1;sources=audioByTest[activeModule+':'+activeTest]||{};positions={};TEST=catalog[activeModule][activeTest];highlights=JSON.parse(JSON.stringify(r.highlights||{}));answers={...r.answers};result=JSON.parse(JSON.stringify(r.result));elapsed=r.elapsed;submitted=true;attemptStarted=true;reviewingId=r.id;storageNotice='';section=1;showExam();}};
+ $('history').onclick=e=>{const view=e.target.closest('[data-history-view]'),retry=e.target.closest('[data-history-retry]');if(retry){const r=getHistory().find(x=>x.id===retry.dataset.historyRetry);pendingRetry={id:r?.testId||1,module:r?.module||'listening'};$('restart-dialog').showModal();return}if(view)openAttemptReview(view.dataset.historyView);};
+}
+function openAttemptReview(id){const r=getHistory().find(x=>x.id===id);if(!r)return;if(!reviewBackup)reviewBackup={activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers:{...answers},submitted,result,started,elapsed,reviewingId,storageNotice};audioByTest[activeModule+':'+activeTest]=sources;activeModule=r.module||'listening';timerMode=r.timerMode||'elapsed';activeTest=r.testId||1;sources=audioByTest[activeModule+':'+activeTest]||{};positions={};TEST=catalog[activeModule][activeTest];highlights=JSON.parse(JSON.stringify(r.highlights||{}));answers={...r.answers};result=JSON.parse(JSON.stringify(r.result));elapsed=r.elapsed;submitted=true;attemptStarted=true;reviewingId=r.id;storageNotice='';section=1;showExam();
 }
 function returnCurrent(){if(reviewBackup){({activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers,submitted,result,started,elapsed,reviewingId,storageNotice}=reviewBackup);reviewBackup=null;TEST=catalog[activeModule][activeTest];}if(inLibrary)showLibrary();else{showExam();loadAudio();}}
 $('history-open').onclick=showHistory;
@@ -154,7 +179,7 @@ async function finishAttempt(fromTimeLimit=false){
 $('finish').onclick=()=>finishAttempt();
 function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';audio.pause();highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
 function startTest(selection){const id=typeof selection==='object'?selection.id:selection,nextModule=typeof selection==='object'?selection.module:activeModule;clearAttempt();if(activeTest!==id||activeModule!==nextModule){audioByTest[activeModule+':'+activeTest]=sources;sources=audioByTest[nextModule+':'+id]||{};}activeModule=nextModule;timerMode='elapsed';activeTest=id;TEST=catalog[activeModule][id];inLibrary=false;pendingRetry=null;pendingTest=null;showExam();clock();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;window.scrollTo({top:0});}
-function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
+function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
 function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else if(testId)startTest(testId);else showLibrary();}
 let suppressHighlightClick=false;
 $('paper').addEventListener('click',event=>{if(suppressHighlightClick){event.preventDefault();event.stopPropagation();suppressHighlightClick=false;}},true);
