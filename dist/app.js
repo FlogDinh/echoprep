@@ -1,6 +1,8 @@
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let attemptStarted=false;
 let activeModule="listening",timerMode="elapsed";
+const READING_TIME_LIMIT=60*60;
+let timeLimitPending=false;
 const catalog={listening:TESTS,reading:READING_TESTS};
 const moduleName=()=>activeModule==="reading"?"Reading":"Listening";
 const groups=()=>TEST.groups||[[1,10],[11,20],[21,30],[31,40]];
@@ -25,7 +27,33 @@ async function saveAttempt(){const record=pendingSave||{highlights:JSON.parse(JS
 
 const duration=seconds=>[Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(x=>String(x).padStart(2,'0')).join(':');
 const audio=$('audio'), labels=['music room','assembly hall','computer room','cloakroom','Head’s office','gym','reception'];
-const clock=()=>{if(attemptStarted&&!submitted&&!inLibrary)elapsed=Math.floor((Date.now()-started)/1000);$('timer').textContent=timerMode==='timed'&&attemptStarted&&!submitted? (elapsed>=3600?'Hết giờ · +'+duration(elapsed-3600):duration(3600-elapsed)):duration(elapsed)};setInterval(clock,1000);
+function clock(){
+ if(attemptStarted&&!submitted&&!inLibrary&&!timeLimitPending){
+  elapsed=Math.max(0,Math.floor((Date.now()-started)/1000));
+  if(activeModule==='reading'&&timerMode==='timed'&&elapsed>=READING_TIME_LIMIT)offerTimeLimitChoice();
+ }
+ $('timer').textContent=timerMode==='timed'&&attemptStarted&&!submitted?duration(Math.max(0,READING_TIME_LIMIT-elapsed)):duration(elapsed);
+}
+setInterval(clock,1000);
+function offerTimeLimitChoice(){
+ if(timeLimitPending)return;
+ timeLimitPending=true;elapsed=READING_TIME_LIMIT;
+ // The deadline choice takes precedence over a pending submit/leave confirmation.
+ for(const id of ['confirm','abort-dialog','restart-dialog'])if($(id).open)$(id).close();
+ pendingTest=null;pendingRetry=null;
+ $('time-limit-progress').textContent=`Bạn đã trả lời ${Object.values(answers).filter(Boolean).length}/40 câu.`;
+ $('time-limit-dialog').showModal();$('time-limit-title').focus();
+}
+$('time-limit-dialog').addEventListener('cancel',event=>event.preventDefault());
+$('time-limit-dialog').addEventListener('keydown',event=>{if(event.key==='Escape')event.preventDefault();});
+$('time-limit-continue').onclick=()=>{
+ if(!timeLimitPending||submitted)return;
+ timerMode='elapsed';timeLimitPending=false;elapsed=READING_TIME_LIMIT;
+ // Exclude time spent deciding; count up from exactly 60 minutes.
+ started=Date.now()-READING_TIME_LIMIT*1000;
+ $('time-mode').value='elapsed';$('time-limit-dialog').close();clock();
+};
+$('time-limit-submit').onclick=()=>finishAttempt(true);
 function count(){const n=Object.values(answers).filter(Boolean).length;$('answered').textContent=`${n} / 40`;$('progress').style.width=`${n/40*100}%`;document.querySelectorAll('[data-jump]').forEach(b=>{b.classList.toggle('filled',!!answers[b.dataset.jump]);if(result)b.classList.add(result.rows[b.dataset.jump-1].status)});}
 function options(q,multi=false){return `<div class="choice-block" id="q${q.n}"><h3><span class="qnum">${multi?q.n+'–'+(q.n+choiceSize(q)-1):q.n}</span>${esc(q.prompt)}</h3>${multi?`<p class="instruction">Choose ${choiceSize(q)===3?'THREE':'TWO'} correct answers.</p>`:''}${q.options.map((t,i)=>{const l=q.values?.[i]||String.fromCharCode(65+i);const checked=multi?Array.from({length:choiceSize(q)},(_,j)=>answers[q.n+j]).includes(l):answers[q.n]===l;return `<label class="choice"><input type="${multi?'checkbox':'radio'}" name="q${q.n}" data-choice="${q.n}" data-multi="${multi}" value="${l}" ${checked?'checked':''} ${submitted?'disabled':''}>${q.values?'':`<span class="letter">${l}</span>`}${esc(t)}</label>`}).join('')}</div>`}
 function updateTestSelection(){document.querySelectorAll('[data-start-test]').forEach(el=>{const selected=!inLibrary&&+el.dataset.startTest===activeTest&&(el.dataset.module||'listening')===activeModule;el.classList.toggle('test-selected',selected);if(el.closest('aside')){el.style.background=selected?'#e3ecff':'#ffffff';el.style.color=selected?'#1d4ed8':'#64748b';el.style.borderColor=selected?'#8eaeff':'#dce3ed';el.style.fontWeight=selected?'700':'500';el.style.boxShadow=selected?'inset 3px 0 0 #1d4ed8':'none';}if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});}
@@ -63,7 +91,7 @@ $('questions').addEventListener('click',e=>{const b=e.target.closest('[data-jump
 $('files').addEventListener('change',e=>{const files=[...e.target.files];let assigned=0;files.forEach(f=>{const match=f.name.match(/(?:T(\d+)[-_ ]?)?S([1-4])\b/i);if(match?.[1]&&+match[1]!==activeTest)return;let n=match?+match[2]:files.length===1?section:null;if(!n)return;if(sources[n])URL.revokeObjectURL(sources[n]);sources[n]=URL.createObjectURL(f);assigned++});loadAudio();if(!assigned)$('audio-status').textContent=`Chọn từng file để gán cho section hiện tại, hoặc dùng tên T${activeTest}-S1.mp3 … T${activeTest}-S4.mp3.`});
 $('speed').onchange=()=>audio.playbackRate=+$('speed').value;$('back5').onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-5);$('forward5').onclick=()=>{if(Number.isFinite(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+5)};
 audio.onerror=()=>$('audio-status').textContent='Không phát được file này. Hãy chọn lại file MP3 cho section hiện tại.';
-$('submit').onclick=()=>{if(!attemptStarted||submitted)return;$('confirm-text').textContent=`Bạn đã trả lời ${Object.values(answers).filter(Boolean).length}/40 câu. ${TEST.hasAnswerKey===false?'Lưu bài làm để xem lại; chưa chấm đúng/sai do chưa có đáp án nguồn.':'Nộp bài để xem đúng, sai và đáp án.'}`;$('confirm').showModal()};$('cancel').onclick=()=>$('confirm').close();
+$('submit').onclick=()=>{if(!attemptStarted||submitted)return;clock();if(timeLimitPending)return;$('confirm-text').textContent=`Bạn đã trả lời ${Object.values(answers).filter(Boolean).length}/40 câu. ${TEST.hasAnswerKey===false?'Lưu bài làm để xem lại; chưa chấm đúng/sai do chưa có đáp án nguồn.':'Nộp bài để xem đúng, sai và đáp án.'}`;$('confirm').showModal()};$('cancel').onclick=()=>$('confirm').close();
 function explanationButton(n){return `<button class="explanation-button" data-explain="${n}">Xem giải thích · Câu ${n}</button>`}
 function renderReview(){
  document.body.classList.toggle('review-mode',submitted&&!$('paper').hidden);
@@ -116,8 +144,15 @@ function renderHistory(){
 }
 function returnCurrent(){if(reviewBackup){({activeModule,timerMode,highlights,attemptStarted,activeTest,inLibrary,sources,positions,section,answers,submitted,result,started,elapsed,reviewingId,storageNotice}=reviewBackup);reviewBackup=null;TEST=catalog[activeModule][activeTest];}if(inLibrary)showLibrary();else{showExam();loadAudio();}}
 $('history-open').onclick=showHistory;
-$('finish').onclick=async()=>{if(submitted||!attemptStarted)return;$('confirm').close();clock();submitted=true;positions[section]=audio.currentTime;audio.pause();result=EchoGrade.grade(answers,TEST.answers,TEST.grading);await saveAttempt();section=1;selectedQuestion=null;$('review-shell').hidden=false;$('explanation-sheet').hidden=true;render();loadAudio();renderResults();};
-function clearAttempt(){chosen='';audio.pause();highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
+async function finishAttempt(fromTimeLimit=false){
+ if(submitted||!attemptStarted||(fromTimeLimit&&!timeLimitPending))return;
+ if(!fromTimeLimit){clock();if(timeLimitPending)return;}
+ $('confirm').close();$('time-limit-dialog').close();timeLimitPending=false;submitted=true;
+ positions[section]=audio.currentTime;audio.pause();result=EchoGrade.grade(answers,TEST.answers,TEST.grading);await saveAttempt();
+ section=1;selectedQuestion=null;showExam();
+}
+$('finish').onclick=()=>finishAttempt();
+function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';audio.pause();highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
 function startTest(selection){const id=typeof selection==='object'?selection.id:selection,nextModule=typeof selection==='object'?selection.module:activeModule;clearAttempt();if(activeTest!==id||activeModule!==nextModule){audioByTest[activeModule+':'+activeTest]=sources;sources=audioByTest[nextModule+':'+id]||{};}activeModule=nextModule;timerMode='elapsed';activeTest=id;TEST=catalog[activeModule][id];inLibrary=false;pendingRetry=null;pendingTest=null;showExam();clock();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;window.scrollTo({top:0});}
 function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
 function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else if(testId)startTest(testId);else showLibrary();}
