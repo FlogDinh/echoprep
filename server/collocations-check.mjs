@@ -100,6 +100,7 @@ export async function checkCollocations({evaluate,call,wait}){
   await evaluate("document.getElementById('flashcard').click()");
  }
  await call('Emulation.clearDeviceMetricsOverride');
+ await checkAcademicStress({evaluate,call,wait,speechAvailable});
  assert.equal(await evaluate("(async()=> (await (await fetch('/api/history')).json()).length)()"),historyBefore);
  // Missing speech support must not prevent reading, flipping or navigating cards.
  await call('Page.enable');
@@ -115,4 +116,57 @@ export async function checkCollocations({evaluate,call,wait}){
  await wait("!!document.getElementById('begin-attempt')&&typeof activeModule!=='undefined'&&activeModule==='reading'&&getHistory().length==="+historyBefore);
  assert.equal(await evaluate('activeTest'),1);
  console.log('PASS COLLOCATIONS: safe navigation from exams, all 54 bilingual cards/6 groups, front/back IPA, autoplay on click/Space with correct English phrase, no autoplay on front/next, normal/slow replay and cancellation, shuffle, filtered lists, unsupported-speech fallback, desktop/mobile layout, Reading return and unchanged exam history.');
+}
+
+async function checkAcademicStress({evaluate,call,wait,speechAvailable}){
+ await evaluate("document.getElementById('essay-type').value='causes-effects';document.getElementById('essay-type').dispatchEvent(new Event('change'))");
+ assert.equal(await evaluate("document.getElementById('topic-title').textContent"),'Academic Stress');
+ assert.equal(await evaluate("document.querySelector('#topic-menu [aria-current=page]').dataset.topic"),'academic-stress');
+ assert.equal(await evaluate("new URLSearchParams(location.search).get('topic')"),'academic-stress');
+ const data=await evaluate("ECHO_COLLOCATIONS.types.find(t=>t.id==='causes-effects').topics[0].groups.flatMap(g=>g.cards)");
+ assert.equal(data.length,23);
+ assert.equal(data.filter(c=>c.kind==='grammar').length,3);
+ assert.equal(new Set(data.map(c=>c.id)).size,23);
+ assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),true);
+ for(const card of data){
+  assert.equal(await evaluate("document.getElementById('card-english').textContent"),card.english);
+  await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
+  assert.equal(await evaluate("document.getElementById('card-back-english').textContent"),card.spokenText||card.english);
+  assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),card.meaning);
+  assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),card.ipa);
+  if(speechAvailable)assert.equal(await evaluate('qaSpeech.at(-1).text'),card.spokenText||card.english);
+  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),card.kind!=='grammar');
+  if(card.kind==='grammar'){
+   assert.equal(await evaluate("document.getElementById('card-front-label').textContent"),'CẤU TRÚC NGỮ PHÁP');
+   assert.ok(await evaluate("document.getElementById('grammar-notes').textContent").then(text=>text.includes(card.rule)&&text.includes(card.incorrectExample)&&text.includes('Lỗi minh hoạ cần tránh')&&text.includes('đã được dùng đúng')));
+  }
+  await evaluate("document.getElementById('card-next').click()");
+  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),true);
+ }
+ await evaluate("document.getElementById('colloc-group').value='grammar-practice';document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('wordlist-tab').click()");
+ assert.equal(await evaluate("document.querySelectorAll('#wordlist-body tr').length"),3);
+ assert.equal(await evaluate("document.querySelectorAll('#wordlist-body .grammar-correct').length"),3);
+ if(speechAvailable){
+  await call('Runtime.evaluate',{expression:"document.querySelectorAll('#wordlist-body [data-speak]')[1].click()",userGesture:true});
+  assert.equal(await evaluate('qaSpeech.at(-1).text'),'Parents expect students to get excellent scores.');
+ }
+ await evaluate("document.getElementById('flashcard-tab').click();document.getElementById('flashcard').click()");
+ for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]){
+  await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});
+  assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
+  if(process.env.ECHOPREP_SCREENSHOT){
+   await evaluate("document.getElementById('grammar-notes').scrollIntoView({block:'end'})");
+   await writeFile(`/tmp/echoprep-academic-grammar-${name}.png`,Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  }
+ }
+ await call('Emulation.clearDeviceMetricsOverride');
+ await evaluate('window.qaAcademicBeforeReload=true');await call('Page.reload');
+ await wait("!window.qaAcademicBeforeReload&&!!document.getElementById('topic-title')&&document.getElementById('topic-title').textContent==='Academic Stress'");
+ assert.equal(await evaluate("document.getElementById('essay-type').value"),'causes-effects');
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 23');
+ await evaluate("document.getElementById('essay-type').value='advantages-disadvantages';document.getElementById('essay-type').dispatchEvent(new Event('change'))");
+ assert.equal(await evaluate("document.getElementById('topic-title').textContent"),'Studying Abroad');
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
+ assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),true);
+ console.log('PASS ACADEMIC STRESS: 20 collocations and 3 grammar cards, correct examples/IPA/rules, explicitly illustrative mistakes, spoken examples rather than formula symbols, filtered list, phone/desktop layout, persisted topic link and original 54 cards preserved.');
 }

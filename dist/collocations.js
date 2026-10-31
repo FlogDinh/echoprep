@@ -2,7 +2,8 @@
  'use strict';
  const $=id=>document.getElementById(id),types=window.ECHO_COLLOCATIONS.types;
  const esc=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
- let type=types[0],topic=type.topics[0],group='all',cards=[],index=0,flipped=false,mode='flashcard',speechToken=0,utterance=null;
+ const params=new URLSearchParams(location.search);
+ let type=types.find(item=>item.id===params.get('type'))||types.find(item=>item.topics.some(topic=>topic.id===params.get('topic')))||types[0],topic=type.topics.find(item=>item.id===params.get('topic'))||type.topics[0],group='all',cards=[],index=0,flipped=false,mode='flashcard',speechToken=0,utterance=null;
  const synth=window.speechSynthesis,speechAvailable=!!synth&&typeof window.SpeechSynthesisUtterance==='function';
  const allCards=()=>topic.groups.flatMap(item=>item.cards);
  const groupTitle=id=>{const item=topic.groups.find(item=>item.id===id);return item?`${item.title} · ${item.meaning}`:'';};
@@ -11,10 +12,10 @@
   stopSpeech();
   if(!speechAvailable){$('speech-status').textContent='Trình duyệt này chưa hỗ trợ đọc thành tiếng. Bạn vẫn có thể xem phiên âm IPA.';return;}
   const token=speechToken;
-  utterance=new SpeechSynthesisUtterance(card.english);
+  utterance=new SpeechSynthesisUtterance(card.spokenText||card.english);
   const voices=synth.getVoices(),voice=voices.find(item=>/^en-GB$/i.test(item.lang))||voices.find(item=>/^en\b/i.test(item.lang));
   utterance.lang=voice?.lang||'en-GB';if(voice)utterance.voice=voice;utterance.rate=rate;
-  utterance.onstart=()=>{if(token===speechToken)$('speech-status').textContent=`Đang đọc: ${card.english}`;};
+  utterance.onstart=()=>{if(token===speechToken)$('speech-status').textContent=`Đang đọc: ${card.spokenText||card.english}`;};
   utterance.onend=()=>{if(token===speechToken){$('speech-status').textContent='';utterance=null;}};
   utterance.onerror=event=>{if(token===speechToken&&!['canceled','interrupted'].includes(event.error)){$('speech-status').textContent='Chưa phát được giọng đọc tiếng Anh. Bạn vẫn có thể xem phiên âm IPA.';utterance=null;}};
   try{synth.speak(utterance);}catch{$('speech-status').textContent='Chưa phát được giọng đọc tiếng Anh. Bạn vẫn có thể xem phiên âm IPA.';}
@@ -22,28 +23,38 @@
  function setSide(back){
   stopSpeech();flipped=back;
   $('card-front').hidden=flipped;$('card-back').hidden=!flipped;$('card-pronunciation').hidden=!flipped;$('flip-help').hidden=flipped;
+  $('grammar-notes').hidden=!flipped||!cards[index].rule;
   $('flashcard').dataset.side=flipped?'back':'front';$('flashcard').setAttribute('aria-expanded',String(flipped));
-  const card=cards[index];$('flashcard').setAttribute('aria-label',flipped?`${card.english}. ${card.meaning}. Lật thẻ về mặt cụm tiếng Anh.`:`${card.english}. Lật thẻ để xem nghĩa và phát âm.`);
+  const card=cards[index];$('flashcard').setAttribute('aria-label',flipped?`${card.spokenText||card.english}. ${card.meaning}. Lật thẻ về mặt cụm tiếng Anh.`:`${card.english}. Lật thẻ để xem nghĩa và phát âm.`);
   if(flipped)speak(card);
  }
  function renderCard(){
   const card=cards[index];if(!card)return;
-  $('card-english').textContent=card.english;$('card-back-english').textContent=card.english;$('card-meaning').textContent=card.meaning;$('card-ipa').textContent=card.ipa;
+  $('card-english').textContent=card.english;$('card-back-english').textContent=card.spokenText||card.english;$('card-meaning').textContent=card.meaning;$('card-ipa').textContent=card.ipa;
+  $('card-front-label').textContent=card.kind==='grammar'?'CẤU TRÚC NGỮ PHÁP':'CỤM TIẾNG ANH';$('card-back-label').textContent=card.kind==='grammar'?'VÍ DỤ ĐÚNG & PHÁT ÂM':'NGHĨA & PHÁT ÂM';
+  $('pronounce').textContent=card.kind==='grammar'?'♪ Nghe ví dụ đúng':'♪ Nghe phát âm';
+  $('grammar-notes').innerHTML=grammarNotes(card);
   $('card-group').textContent=groupTitle(card.group);$('card-counter').textContent=`Thẻ ${index+1} / ${cards.length}`;
   $('flashcard').dataset.cardId=card.id;
   setSide(false);
  }
+ function grammarNotes(card){
+  if(!card.rule)return '';
+  return `<h3>Cách dùng đúng</h3><p>${esc(card.rule)}</p><p class="grammar-correct"><strong>Ví dụ đúng:</strong> <span lang="en">${esc(card.spokenText)}</span></p><p class="grammar-incorrect"><strong>Lỗi minh hoạ cần tránh:</strong> <span lang="en">${esc(card.incorrectExample)}</span></p><p class="grammar-source-note">${esc(topic.grammarNote||'')}</p>`;
+ }
  function renderList(){
+  $('wordlist-title').textContent=topic.groups.some(g=>g.cards.some(c=>c.kind==='grammar'))?'Collocations & ngữ pháp':'Danh sách collocations';
   $('wordlist-count').textContent=`${cards.length} thẻ`;
-  $('wordlist-body').innerHTML=cards.map(card=>`<tr><td><span lang="en">${esc(card.english)}</span><small>${esc(groupTitle(card.group))}</small></td><td>${esc(card.meaning)}</td><td class="list-ipa" lang="en-GB">${esc(card.ipa)}</td><td><button type="button" data-speak="${esc(card.id)}" aria-label="Nghe phát âm: ${esc(card.english)}" ${speechAvailable?'':'disabled'}>♪ Nghe</button></td></tr>`).join('');
+  $('wordlist-body').innerHTML=cards.map(card=>`<tr><td><span lang="en">${esc(card.english)}</span><small>${esc(groupTitle(card.group))}</small></td><td>${esc(card.meaning)}${card.rule?`<div class="list-grammar-notes">${grammarNotes(card)}</div>`:''}</td><td class="list-ipa" lang="en-GB">${esc(card.ipa)}</td><td><button type="button" data-speak="${esc(card.id)}" aria-label="Nghe phát âm: ${esc(card.spokenText||card.english)}" ${speechAvailable?'':'disabled'}>♪ Nghe</button></td></tr>`).join('');
  }
  function resetDeck(){cards=allCards().filter(card=>group==='all'||card.group===group);index=0;renderCard();renderList();}
  function selectTopic(id){
   topic=type.topics.find(item=>item.id===id)||type.topics[0];group='all';
   $('topic-title').textContent=topic.title;
-  $('topic-description').textContent=`${type.title} · ${allCards().length} thẻ · ${topic.groups.length} nhóm collocations`;
+  $('topic-description').textContent=`${type.title} · ${allCards().length} thẻ · ${topic.groups.length} nhóm học`;
   $('topic-menu').innerHTML=type.topics.map(item=>`<button type="button" data-topic="${esc(item.id)}" aria-current="${item===topic?'page':'false'}">${esc(item.title)}<small>${item.groups.reduce((n,g)=>n+g.cards.length,0)} thẻ</small></button>`).join('');
   $('colloc-group').innerHTML=`<option value="all">Tất cả nhóm (${allCards().length})</option>`+topic.groups.map(item=>`<option value="${esc(item.id)}">${esc(item.title)} (${item.cards.length})</option>`).join('');
+  const url=new URL(location.href);url.searchParams.set('type',type.id);url.searchParams.set('topic',topic.id);history.replaceState(null,'',url);
   resetDeck();
  }
  function setMode(next){
@@ -52,6 +63,7 @@
  }
  function move(by){index=(index+by+cards.length)%cards.length;renderCard();}
  $('essay-type').innerHTML=types.map(item=>`<option value="${esc(item.id)}">${esc(item.title)}</option>`).join('');
+ $('essay-type').value=type.id;
  $('essay-type').onchange=()=>{type=types.find(item=>item.id===$('essay-type').value);selectTopic(type.topics[0].id);};
  $('topic-menu').onclick=event=>{const button=event.target.closest('[data-topic]');if(button)selectTopic(button.dataset.topic);};
  $('colloc-group').onchange=()=>{group=$('colloc-group').value;resetDeck();};
