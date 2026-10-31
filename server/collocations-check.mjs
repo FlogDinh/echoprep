@@ -1,3 +1,4 @@
+import {checkPronunciation} from './pronunciation-check.mjs';
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 
@@ -36,7 +37,7 @@ export async function checkCollocations({evaluate,call,wait}){
  if(speechAvailable){
   assert.equal(await evaluate('qaSpeech.length'),1);
   assert.deepEqual(await evaluate('qaSpeech[0]'),{text:'Study abroad',lang:await evaluate('qaSpeech[0].lang'),rate:1});
-  assert.match(await evaluate('qaSpeech[0].lang'),/^en/i);
+  assert.equal(await evaluate('qaSpeech[0].lang'),'en-US');
   await call('Runtime.evaluate',{expression:"document.getElementById('pronounce').click()",userGesture:true});
   assert.equal(await evaluate('qaSpeech.length'),2);
   await call('Runtime.evaluate',{expression:"document.getElementById('pronounce-slow').click()",userGesture:true});
@@ -110,6 +111,7 @@ export async function checkCollocations({evaluate,call,wait}){
  await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
  assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
  assert.equal(await evaluate("(async()=> (await (await fetch('/api/history')).json()).length)()"),historyBefore);
+ await checkPronunciation({evaluate,call,wait});
  // Missing speech support must not prevent reading, flipping or navigating cards.
  await call('Page.enable');
  const injected=await call('Page.addScriptToEvaluateOnNewDocument',{source:"window.qaWithoutSpeech=true;window.SpeechSynthesisUtterance=undefined;"});
