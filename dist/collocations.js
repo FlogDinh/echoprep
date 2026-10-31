@@ -24,6 +24,7 @@
   $('card-front').hidden=flipped;$('card-back').hidden=!flipped;$('card-pronunciation').hidden=!flipped;$('flip-help').hidden=flipped;
   $('flashcard').dataset.side=flipped?'back':'front';$('flashcard').setAttribute('aria-expanded',String(flipped));
   const card=cards[index];$('flashcard').setAttribute('aria-label',flipped?`${card.english}. ${card.meaning}. Lật thẻ về mặt cụm tiếng Anh.`:`${card.english}. Lật thẻ để xem nghĩa và phát âm.`);
+  if(flipped)speak(card);
  }
  function renderCard(){
   const card=cards[index];if(!card)return;

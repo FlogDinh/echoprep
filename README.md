@@ -10,7 +10,7 @@ Menu **Ôn Collocations** mở trang [flashcard](https://flogdinh.github.io/echo
 
 Mặt trước là cụm tiếng Anh; nhấn/Space để lật sang nghĩa tiếng Việt và phiên âm IPA Anh–Anh. Có nút nghe thường/nghe chậm, thẻ trước/sau (phím mũi tên), xáo trộn, lọc nhóm và danh sách đầy đủ. Thẻ không tạo lượt lịch sử thi. Nếu đang làm đề, chuyển sang collocations dùng xác nhận huỷ lượt hiện có.
 
-Âm thanh dùng giọng tiếng Anh sẵn có qua [SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis); ưu tiên en-GB, rồi giọng tiếng Anh khác. Không tự phát khi lật thẻ. Giọng đọc phụ thuộc trình duyệt/hệ điều hành; khi chưa hỗ trợ vẫn xem được nghĩa và IPA. Phiên âm là cách đọc rõ từng từ, không biểu diễn toàn bộ nối âm/ngữ điệu. Tham khảo phát âm các từ: [orientation](https://dictionary.cambridge.org/pronunciation/english/orientation), [psychological](https://dictionary.cambridge.org/pronunciation/english/psychological), [proactively](https://dictionary.cambridge.org/pronunciation/english/proactively).
+Âm thanh dùng giọng tiếng Anh sẵn có qua [SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis); ưu tiên en-GB, rồi giọng tiếng Anh khác. Lật sang mặt nghĩa sẽ tự đọc cụm tiếng Anh; lật về mặt trước/chuyển thẻ sẽ dừng giọng đang đọc. Giọng đọc phụ thuộc trình duyệt/hệ điều hành; khi chưa hỗ trợ vẫn xem được nghĩa và IPA. Phiên âm là cách đọc rõ từng từ, không biểu diễn toàn bộ nối âm/ngữ điệu. Tham khảo phát âm các từ: [orientation](https://dictionary.cambridge.org/pronunciation/english/orientation), [psychological](https://dictionary.cambridge.org/pronunciation/english/psychological), [proactively](https://dictionary.cambridge.org/pronunciation/english/proactively).
 
 ## Tài khoản và lịch sử
 

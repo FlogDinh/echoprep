@@ -23,23 +23,33 @@ export async function checkCollocations({evaluate,call,wait}){
  assert.equal(await evaluate("document.getElementById('card-front').hidden"),false);
  assert.equal(await evaluate("document.getElementById('card-back').hidden"),true);
  assert.equal(await evaluate("getComputedStyle(document.getElementById('card-pronunciation')).display"),'none');
- await evaluate("document.getElementById('flashcard').click()");
- assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),'Du học');
- assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),'/ˈstʌdi əˈbrɔːd/');
- assert.equal(await evaluate("document.getElementById('card-back').hidden"),false);
- assert.match(await evaluate("document.getElementById('flashcard').getAttribute('aria-label')"),/Du học/);
  const speechAvailable=await evaluate("!!window.speechSynthesis&&typeof SpeechSynthesisUtterance==='function'");
  if(speechAvailable){
   // Keep the real engine; capture the utterance and mute test output on the local machine.
   await evaluate(`window.qaSpeech=[];window.qaCancelCount=0;const qaNativeSpeak=speechSynthesis.speak.bind(speechSynthesis),qaNativeCancel=speechSynthesis.cancel.bind(speechSynthesis);speechSynthesis.speak=utterance=>{qaSpeech.push({text:utterance.text,lang:utterance.lang,rate:utterance.rate});utterance.volume=0;qaNativeSpeak(utterance)};speechSynthesis.cancel=()=>{qaCancelCount++;qaNativeCancel()};`);
-  await call('Runtime.evaluate',{expression:"document.getElementById('pronounce').click()",userGesture:true});
+ }
+ await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
+ assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),'Du học');
+ assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),'/ˈstʌdi əˈbrɔːd/');
+ assert.equal(await evaluate("document.getElementById('card-back').hidden"),false);
+ assert.match(await evaluate("document.getElementById('flashcard').getAttribute('aria-label')"),/Du học/);
+ if(speechAvailable){
+  assert.equal(await evaluate('qaSpeech.length'),1);
   assert.deepEqual(await evaluate('qaSpeech[0]'),{text:'Study abroad',lang:await evaluate('qaSpeech[0].lang'),rate:1});
   assert.match(await evaluate('qaSpeech[0].lang'),/^en/i);
+  await call('Runtime.evaluate',{expression:"document.getElementById('pronounce').click()",userGesture:true});
+  assert.equal(await evaluate('qaSpeech.length'),2);
   await call('Runtime.evaluate',{expression:"document.getElementById('pronounce-slow').click()",userGesture:true});
+  assert.equal(await evaluate('qaSpeech.length'),3);
   assert.equal(await evaluate('qaSpeech.at(-1).rate'),0.75);
+  await evaluate("document.getElementById('flashcard').click()");
+  assert.equal(await evaluate('qaSpeech.length'),3); // No replay when returning to the English front.
+  await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
+  assert.equal(await evaluate('qaSpeech.length'),4);
   const cancels=await evaluate('qaCancelCount');
   await evaluate("document.getElementById('card-next').click()");
   assert.ok(await evaluate('qaCancelCount')>cancels);
+  assert.equal(await evaluate('qaSpeech.length'),4); // Moving to a fresh card must not autoplay it.
  }else await evaluate("document.getElementById('card-next').click()");
  assert.equal(await evaluate("document.getElementById('card-back').hidden"),true);
  assert.equal(await evaluate("document.getElementById('card-english').textContent"),'Access higher-quality education');
@@ -50,6 +60,7 @@ export async function checkCollocations({evaluate,call,wait}){
   await evaluate("document.getElementById('flashcard').click()");
   const shown=await evaluate("({english:document.getElementById('card-back-english').textContent,meaning:document.getElementById('card-meaning').textContent,ipa:document.getElementById('card-ipa').textContent,id:document.getElementById('flashcard').dataset.cardId})");
   const expected=dataset.find(c=>c.id===shown.id);assert.deepEqual(shown,{id:expected.id,english:expected.english,meaning:expected.meaning,ipa:expected.ipa});
+  if(speechAvailable)assert.equal(await evaluate('qaSpeech.at(-1).text'),shown.english);
   await evaluate("document.getElementById('card-next').click()");
  }
  assert.equal(new Set(visited).size,54);
@@ -58,6 +69,7 @@ export async function checkCollocations({evaluate,call,wait}){
  await call('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
  await call('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
  assert.equal(await evaluate("document.getElementById('card-back').hidden"),false);
+ if(speechAvailable)assert.equal(await evaluate('qaSpeech.at(-1).text'),'Study abroad');
  await call('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
  assert.equal(await evaluate("document.getElementById('card-english').textContent"),'Access higher-quality education');
  assert.equal(await evaluate("document.getElementById('card-back').hidden"),true);
@@ -102,5 +114,5 @@ export async function checkCollocations({evaluate,call,wait}){
  await evaluate("document.querySelector('.learning-menu a[href*=reading]').click()");
  await wait("!!document.getElementById('begin-attempt')&&typeof activeModule!=='undefined'&&activeModule==='reading'&&getHistory().length==="+historyBefore);
  assert.equal(await evaluate('activeTest'),1);
- console.log('PASS COLLOCATIONS: safe navigation from exams, all 54 bilingual cards/6 groups, front/back IPA, matching content, keyboard, shuffle, filtered lists, normal/slow English speech and cancellation, unsupported-speech fallback, desktop/mobile layout, Reading return and unchanged exam history.');
+ console.log('PASS COLLOCATIONS: safe navigation from exams, all 54 bilingual cards/6 groups, front/back IPA, autoplay on click/Space with correct English phrase, no autoplay on front/next, normal/slow replay and cancellation, shuffle, filtered lists, unsupported-speech fallback, desktop/mobile layout, Reading return and unchanged exam history.');
 }
