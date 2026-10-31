@@ -4,6 +4,14 @@ Luyện IELTS Listening và Reading bằng tiếng Việt. Website: https://flog
 
 Vol 9 hiện có **Listening Test 1–9** và **Reading Test 1–12**. Mỗi test có 40 câu; Listening chia bốn section, Reading chia ba passage. Chọn Listening / Reading → Vol 9 → Test, rồi bấm **Bắt đầu làm bài** mới chạy đồng hồ.
 
+## Ôn Collocations · Writing Task 2
+
+Menu **Ôn Collocations** mở trang [flashcard](https://flogdinh.github.io/echoprep/collocations.html), chia theo dạng bài rồi chủ đề. Bộ đầu tiên: **Advantages & Disadvantages → Studying Abroad**, gồm đủ **54 thẻ trong 6 nhóm** từ danh sách người học cung cấp. Cụm “A positive learning experience” xuất hiện ở hai nhóm và được giữ cả hai cùng nghĩa tương ứng.
+
+Mặt trước là cụm tiếng Anh; nhấn/Space để lật sang nghĩa tiếng Việt và phiên âm IPA Anh–Anh. Có nút nghe thường/nghe chậm, thẻ trước/sau (phím mũi tên), xáo trộn, lọc nhóm và danh sách đầy đủ. Thẻ không tạo lượt lịch sử thi. Nếu đang làm đề, chuyển sang collocations dùng xác nhận huỷ lượt hiện có.
+
+Âm thanh dùng giọng tiếng Anh sẵn có qua [SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis); ưu tiên en-GB, rồi giọng tiếng Anh khác. Không tự phát khi lật thẻ. Giọng đọc phụ thuộc trình duyệt/hệ điều hành; khi chưa hỗ trợ vẫn xem được nghĩa và IPA. Phiên âm là cách đọc rõ từng từ, không biểu diễn toàn bộ nối âm/ngữ điệu. Tham khảo phát âm các từ: [orientation](https://dictionary.cambridge.org/pronunciation/english/orientation), [psychological](https://dictionary.cambridge.org/pronunciation/english/psychological), [proactively](https://dictionary.cambridge.org/pronunciation/english/proactively).
+
 ## Tài khoản và lịch sử
 
 Không cần đăng nhập; không có đăng ký, phân quyền theo account, định danh thiết bị hoặc cấu hình Supabase. Các lượt đã lưu trước đây vẫn được giữ. Mỗi lần nộp tạo một lượt riêng, gồm đáp án, thời lượng, kết quả và highlight; có thể xem lại hoặc làm lại. Mỗi test trong thư viện và menu hiển thị “Đã làm X lần” cùng kết quả lượt nộp gần nhất (ví dụ “Gần nhất: 26/40 câu đúng”), tính riêng theo môn/Vol/Test. Không tính lượt đang làm hoặc đã huỷ; bài chưa có key hiện “Gần nhất: Chưa chấm”. Bản GitHub Pages lưu lịch sử bằng bộ nhớ trình duyệt; không có đồng bộ giữa các máy. Bản local dùng SQLite khi chạy máy chủ bên dưới. Không cần cấu hình dịch vụ ngoài để luyện bài.

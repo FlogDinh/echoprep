@@ -1,3 +1,4 @@
+import {checkCollocations} from './collocations-check.mjs';
 import {checkAudioNavigation} from './audio-navigation-check.mjs';
 import {checkTestHistory,checkUngradedTestHistory} from './test-history-check.mjs';
 import {checkReadingTimeout} from './reading-timeout-check.mjs';
@@ -54,6 +55,7 @@ let ws;try{
  await evaluate("startTest({module:'reading',id:12});$('begin-attempt').click();change(2)");await writeFile('/tmp/echoprep-vol9-reading.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await evaluate('clearAttempt();showLibrary()');await writeFile('/tmp/echoprep-vol9-mobile.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
  }
+ await checkCollocations({evaluate,call,wait});
  console.log('PASS BROWSER: no login, shared history readable from another client, distinct test colors, separate submissions, saved highlights after reload, retry/reset, and all Reading interactions.');
 
 }finally{ws?.close();chrome.kill('SIGTERM');server.kill('SIGTERM');}

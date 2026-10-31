@@ -37,3 +37,5 @@ mark.keyword-highlight{background:#ffeb69;color:inherit;border-radius:2px;paddin
 @media(max-width:700px){#test-history{padding:18px 14px;margin:18px 0}.test-history-heading{gap:10px}.test-history-heading h2{font-size:18px}.test-history-heading p{font-size:12px}.test-history-heading button{padding:7px 9px}.test-history-empty{padding:16px}.test-history-table th,.test-history-table td{padding:12px 10px}}
 
 .audio-section-label{display:inline-flex;align-items:center;gap:7px}#audio-section{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:white;color:inherit;font:inherit}#audio-viewing{font-size:12px;color:#475569;background:#eef3ff;padding:5px 8px;border-radius:6px;white-space:nowrap}@media(max-width:700px){.audio-section-label{font-size:12px}#audio-section{padding:5px}#audio-viewing{font-size:11px}}
+
+#module-menu{flex-wrap:wrap}#module-menu .collocations-menu-link{flex-basis:100%;background:#f7f9ff;color:#1d4ed8;border-color:#cedcf7;font-size:13px}#module-menu .collocations-menu-link:hover{background:#eaf0ff}
