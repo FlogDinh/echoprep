@@ -100,7 +100,15 @@ export async function checkCollocations({evaluate,call,wait}){
   await evaluate("document.getElementById('flashcard').click()");
  }
  await call('Emulation.clearDeviceMetricsOverride');
+ await checkLiving({evaluate,call,speechAvailable});
  await checkAcademicStress({evaluate,call,wait,speechAvailable});
+ await evaluate("document.querySelector('[data-topic=living]').click();window.qaLivingBeforeReload=true");
+ await call('Page.reload');
+ await wait("!window.qaLivingBeforeReload&&!!document.getElementById('topic-title')&&document.getElementById('topic-title').textContent==='Living'");
+ assert.equal(await evaluate("document.getElementById('essay-type').value"),'advantages-disadvantages');
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 38');
+ await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
  assert.equal(await evaluate("(async()=> (await (await fetch('/api/history')).json()).length)()"),historyBefore);
  // Missing speech support must not prevent reading, flipping or navigating cards.
  await call('Page.enable');
@@ -116,6 +124,53 @@ export async function checkCollocations({evaluate,call,wait}){
  await wait("!!document.getElementById('begin-attempt')&&typeof activeModule!=='undefined'&&activeModule==='reading'&&getHistory().length==="+historyBefore);
  assert.equal(await evaluate('activeTest'),1);
  console.log('PASS COLLOCATIONS: safe navigation from exams, all 54 bilingual cards/6 groups, front/back IPA, autoplay on click/Space with correct English phrase, no autoplay on front/next, normal/slow replay and cancellation, shuffle, filtered lists, unsupported-speech fallback, desktop/mobile layout, Reading return and unchanged exam history.');
+}
+
+async function checkLiving({evaluate,call,speechAvailable}){
+ await evaluate("document.querySelector('[data-topic=living]').click()");
+ assert.equal(await evaluate("document.getElementById('topic-title').textContent"),'Living');
+ assert.equal(await evaluate("document.querySelector('#topic-menu [aria-current=page]').dataset.topic"),'living');
+ assert.equal(await evaluate("document.querySelector('[data-topic=studying-abroad]').getAttribute('aria-current')"),'false');
+ assert.ok(await evaluate("getComputedStyle(document.querySelector('[data-topic=living]')).backgroundColor!==getComputedStyle(document.querySelector('[data-topic=studying-abroad]')).backgroundColor"));
+ const groups=await evaluate("ECHO_COLLOCATIONS.types.find(t=>t.id==='advantages-disadvantages').topics.find(t=>t.id==='living').groups");
+ assert.deepEqual(groups.map(group=>group.cards.length),[12,10,8,8]);
+ const data=groups.flatMap(group=>group.cards);
+ assert.equal(data.filter(card=>card.kind==='grammar').length,22);
+ const ids=await evaluate('ECHO_COLLOCATIONS.types.flatMap(t=>t.topics.flatMap(topic=>topic.groups.flatMap(g=>g.cards.map(c=>c.id))))');
+ assert.equal(new Set(ids).size,ids.length);
+ assert.equal(data[1].english,'One of the biggest benefits of + N/V-ing + is + N.');
+ assert.match(data[1].rule,/Another benefit of/);
+ assert.equal(data[4].english,'Benefit from + N/V-ing');
+ assert.equal(data[13].spokenText,'Another significant disadvantage is that public transport is often unreliable.');
+ assert.equal(data[14].spokenText,'Another potential problem is that residents may have difficulty accessing healthcare services.');
+ for(const card of data){
+  assert.equal(await evaluate("document.getElementById('card-english').textContent"),card.english);
+  await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
+  assert.equal(await evaluate("document.getElementById('card-back-english').textContent"),card.spokenText||card.english);
+  assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),card.meaning);
+  assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),card.ipa);
+  if(speechAvailable)assert.equal(await evaluate('qaSpeech.at(-1).text'),card.spokenText||card.english);
+  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),card.kind!=='grammar');
+  assert.equal(await evaluate("document.querySelectorAll('#grammar-notes .grammar-incorrect').length"),card.incorrectExample?1:0);
+  assert.equal(await evaluate("document.getElementById('grammar-notes').textContent.includes('undefined')"),false);
+  await evaluate("document.getElementById('card-next').click()");
+ }
+ for(const group of groups){
+  await evaluate(`document.getElementById('colloc-group').value=${JSON.stringify(group.id)};document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('wordlist-tab').click()`);
+  assert.equal(await evaluate("document.querySelectorAll('#wordlist-body tr').length"),group.cards.length);
+  assert.equal(await evaluate("document.getElementById('wordlist-body').textContent.includes('undefined')"),false);
+ }
+ await evaluate("document.getElementById('colloc-group').value='advantage-structures';document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('flashcard-tab').click();document.getElementById('card-next').click();document.getElementById('flashcard').click()");
+ for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]){
+  await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});
+  assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
+  if(process.env.ECHOPREP_SCREENSHOT){
+   await evaluate("document.getElementById('grammar-notes').scrollIntoView({block:'end'})");
+   await writeFile(`/tmp/echoprep-living-${name}.png`,Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  }
+ }
+ await call('Emulation.clearDeviceMetricsOverride');
+ console.log('PASS LIVING: all 38 cards (22 structures/16 vocabulary), corrected benefit patterns, matching examples/meanings/IPA, spoken correct sentences, optional correction notes, distinct selected topic, four filters, desktop/mobile layout and unique IDs across all decks.');
 }
 
 async function checkAcademicStress({evaluate,call,wait,speechAvailable}){

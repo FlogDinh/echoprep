@@ -40,7 +40,7 @@
  }
  function grammarNotes(card){
   if(!card.rule)return '';
-  return `<h3>Cách dùng đúng</h3><p>${esc(card.rule)}</p><p class="grammar-correct"><strong>Ví dụ đúng:</strong> <span lang="en">${esc(card.spokenText)}</span></p><p class="grammar-incorrect"><strong>Lỗi minh hoạ cần tránh:</strong> <span lang="en">${esc(card.incorrectExample)}</span></p><p class="grammar-source-note">${esc(topic.grammarNote||'')}</p>`;
+  return `<h3>Cách dùng đúng</h3><p>${esc(card.rule)}</p><p class="grammar-correct"><strong>Ví dụ đúng:</strong> <span lang="en">${esc(card.spokenText)}</span></p>${card.incorrectExample?`<p class="grammar-incorrect"><strong>Lỗi minh hoạ cần tránh:</strong> <span lang="en">${esc(card.incorrectExample)}</span></p>`:''}${topic.grammarNote?`<p class="grammar-source-note">${esc(topic.grammarNote)}</p>`:''}`;
  }
  function renderList(){
   $('wordlist-title').textContent=topic.groups.some(g=>g.cards.some(c=>c.kind==='grammar'))?'Collocations & ngữ pháp':'Danh sách collocations';
