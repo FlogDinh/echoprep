@@ -198,7 +198,8 @@ $('finish').onclick=()=>finishAttempt();
 function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';unloadAudio();audioSection=1;highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
 function startTest(selection){const id=typeof selection==='object'?selection.id:selection,nextModule=typeof selection==='object'?selection.module:activeModule;clearAttempt();if(activeTest!==id||activeModule!==nextModule){audioByTest[activeModule+':'+activeTest]=sources;sources=audioByTest[nextModule+':'+id]||{};}activeModule=nextModule;timerMode='elapsed';activeTest=id;TEST=catalog[activeModule][id];inLibrary=false;pendingRetry=null;pendingTest=null;showExam();clock();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;window.scrollTo({top:0});}
 function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
-function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else if(testId)startTest(testId);else showLibrary();}
+function navigateSelection(selection){if(selection?.view==='collocations'){location.assign('collocations.html');}else if(selection)startTest(selection);else showLibrary();}
+function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else navigateSelection(testId);}
 let suppressHighlightClick=false;
 $('paper').addEventListener('click',event=>{if(suppressHighlightClick){event.preventDefault();event.stopPropagation();suppressHighlightClick=false;}},true);
 function captureKeywords(root,key){if(!attemptStarted||submitted||inLibrary)return;const current=highlights[key]||(highlights[key]={});if(EchoHighlight.capture(root,window.getSelection(),current)){suppressHighlightClick=true;setTimeout(()=>{suppressHighlightClick=false;},0);}}
@@ -206,16 +207,16 @@ $('paper').addEventListener('mouseup',()=>captureKeywords($('paper'),section));
 $('transcript-body').addEventListener('mouseup',()=>{if(activeModule==='reading')captureKeywords($('transcript-body'),'passage:'+section)});
 $('begin-attempt').onclick=()=>{if(attemptStarted||submitted||inLibrary)return;timerMode=activeModule==='reading'?$('time-mode').value:'elapsed';attemptStarted=true;started=Date.now();elapsed=0;render();clock();};
 audio.addEventListener('play',()=>{if(activeModule!=='listening'||inLibrary||(!attemptStarted&&!submitted))audio.pause();});
-$('back-library').onclick=()=>requestLeave();$('abort-attempt').onclick=()=>requestLeave();$('abort-continue').onclick=()=>{$('abort-dialog').close();pendingTest=null;};$('abort-confirm').onclick=()=>{const id=pendingTest;$('abort-dialog').close();clearAttempt();pendingTest=null;if(id)startTest(id);else showLibrary();};
+$('back-library').onclick=()=>requestLeave();$('abort-attempt').onclick=()=>requestLeave();$('abort-continue').onclick=()=>{$('abort-dialog').close();pendingTest=null;};$('abort-confirm').onclick=()=>{const id=pendingTest;$('abort-dialog').close();clearAttempt();pendingTest=null;navigateSelection(id);};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-start-test]');if(b){e.preventDefault();requestLeave({id:+b.dataset.startTest,module:b.dataset.module||'listening'})}});
 $('restart-cancel').onclick=()=>{$('restart-dialog').close();pendingRetry=null;};$('restart-confirm').onclick=()=>{$('restart-dialog').close();startTest(pendingRetry||activeTest);};
-async function initialize(){render();clock();updateHistoryStatus();await refreshHistory();}
+async function initialize(){if(new URLSearchParams(location.search).get('module')==='reading'){activeModule='reading';TEST=catalog.reading[1];}render();clock();updateHistoryStatus();await refreshHistory();}
 window.addEventListener('online',refreshHistory);
 window.addEventListener('focus',()=>{if(!$('history').hidden)refreshHistory()});
 setInterval(()=>{if(!document.hidden&&!$('history').hidden)refreshHistory()},30000);
 
 function renderMenu(){
- $('module-menu').innerHTML=['listening','reading'].map(m=>`<button data-module-menu="${m}" class="${m===activeModule?'module-active':''}">${m==='reading'?'Reading':'Listening'}</button>`).join('');
+ $('module-menu').innerHTML=['listening','reading'].map(m=>`<button data-module-menu="${m}" class="${m===activeModule?'module-active':''}">${m==='reading'?'Reading':'Listening'}</button>`).join('')+'<button data-collocations-open class="collocations-menu-link">Ôn Collocations</button>';
  document.querySelector('aside h2').textContent=moduleName()+' - Vol 9';
  const cards=Object.keys(catalog[activeModule]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-start-test="${id}"><span>${moduleName()} Test ${id}</span><small class="test-attempt-count">Đã làm 0 lần</small><small class="test-latest-result" hidden></small></a>`).join('');$('test-menu').innerHTML=cards;
  $('library').innerHTML=`<div class="eyebrow">${moduleName().toUpperCase()} · VOL 9</div><h1>Chọn bài luyện ${activeModule==='reading'?'đọc':'nghe'}</h1><div class="library-tests">${cards}</div>`;
@@ -243,7 +244,7 @@ function updateTestCounts(){
   }
  });
 }
-$('module-menu').onclick=e=>{const b=e.target.closest('[data-module-menu]');if(b&&b.dataset.moduleMenu!==activeModule)requestLeave({id:1,module:b.dataset.moduleMenu});};
+$('module-menu').onclick=e=>{if(e.target.closest('[data-collocations-open]')){requestLeave({view:'collocations'});return;}const b=e.target.closest('[data-module-menu]');if(b&&b.dataset.moduleMenu!==activeModule)requestLeave({id:1,module:b.dataset.moduleMenu});};
 function renderPassage(){
  if(activeModule!=='reading'&&!submitted)return;
  $('transcript-title').textContent=activeModule==='reading'?`Passage ${section} · ${TEST.passages[section-1].title}`:`Transcript · Section ${section}`;
