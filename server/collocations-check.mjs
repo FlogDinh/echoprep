@@ -101,6 +101,7 @@ export async function checkCollocations({evaluate,call,wait}){
   await evaluate("document.getElementById('flashcard').click()");
  }
  await call('Emulation.clearDeviceMetricsOverride');
+ await checkTechnology({evaluate,call,speechAvailable});
  await checkLiving({evaluate,call,speechAvailable});
  await checkAcademicStress({evaluate,call,wait,speechAvailable});
  await evaluate("document.querySelector('[data-topic=living]').click();window.qaLivingBeforeReload=true");
@@ -108,6 +109,10 @@ export async function checkCollocations({evaluate,call,wait}){
  await wait("!window.qaLivingBeforeReload&&!!document.getElementById('topic-title')&&document.getElementById('topic-title').textContent==='Living'");
  assert.equal(await evaluate("document.getElementById('essay-type').value"),'advantages-disadvantages');
  assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 38');
+ await evaluate("document.querySelector('[data-topic=technology]').click();window.qaTechnologyBeforeReload=true");
+ await call('Page.reload');
+ await wait("!window.qaTechnologyBeforeReload&&!!document.getElementById('topic-title')&&document.getElementById('topic-title').textContent==='Technology'");
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 29');
  await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
  assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
  assert.equal(await evaluate("(async()=> (await (await fetch('/api/history')).json()).length)()"),historyBefore);
@@ -126,6 +131,51 @@ export async function checkCollocations({evaluate,call,wait}){
  await wait("!!document.getElementById('begin-attempt')&&typeof activeModule!=='undefined'&&activeModule==='reading'&&getHistory().length==="+historyBefore);
  assert.equal(await evaluate('activeTest'),1);
  console.log('PASS COLLOCATIONS: safe navigation from exams, all 54 bilingual cards/6 groups, front/back IPA, autoplay on click/Space with correct English phrase, no autoplay on front/next, normal/slow replay and cancellation, shuffle, filtered lists, unsupported-speech fallback, desktop/mobile layout, Reading return and unchanged exam history.');
+}
+
+async function checkTechnology({evaluate,call,speechAvailable}){
+ await evaluate("document.querySelector('[data-topic=technology]').click()");
+ assert.equal(await evaluate("document.getElementById('topic-title').textContent"),'Technology');
+ assert.equal(await evaluate("document.querySelector('#topic-menu [aria-current=page]').dataset.topic"),'technology');
+ const groups=await evaluate("ECHO_COLLOCATIONS.types.find(t=>t.id==='advantages-disadvantages').topics.find(t=>t.id==='technology').groups");
+ assert.deepEqual(groups.map(group=>group.cards.length),[8,14,7]);
+ const cards=groups.flatMap(group=>group.cards);
+ assert.equal(cards.length,29);
+ assert.equal(new Set(cards.map(card=>card.english)).size,29);
+ assert.ok(cards.some(card=>card.english==='scroll through my news feeds'));
+ assert.ok(groups[1].cards.some(card=>card.english==='improve quality of life'));
+ assert.ok(!groups[2].cards.some(card=>card.english==='improve quality of life'));
+ for(const card of cards){
+  assert.equal(await evaluate("document.getElementById('card-english').textContent"),card.english);
+  await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
+  assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),card.meaning);
+  assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),card.ipa);
+  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),true);
+  assert.ok(await evaluate("document.querySelectorAll('#cambridge-words a').length>0"));
+  if(speechAvailable){
+   assert.equal(await evaluate('qaSpeech.at(-1).text'),card.english);
+   assert.equal(await evaluate('qaSpeech.at(-1).lang'),'en-US');
+  }
+  await evaluate("document.getElementById('card-next').click()");
+ }
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 29');
+ for(const group of groups){
+  await evaluate(`document.getElementById('colloc-group').value=${JSON.stringify(group.id)};document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('wordlist-tab').click()`);
+  assert.equal(await evaluate("document.querySelectorAll('#wordlist-body tr').length"),group.cards.length);
+ }
+ await evaluate("document.getElementById('colloc-group').value='all';document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('flashcard-tab').click();document.getElementById('flashcard').click()");
+ if(process.env.ECHOPREP_SCREENSHOT){
+  for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]){
+   await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});
+   assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth'));
+   await evaluate("document.getElementById('flashcard').scrollIntoView({block:'center'})");
+   await writeFile(`/tmp/echoprep-technology-${name}.png`,Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  }
+  await call('Emulation.clearDeviceMetricsOverride');
+ }
+ await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
+ console.log('PASS TECHNOLOGY: all 29 source phrases, Vietnamese meanings/IPA, corrected verb classification, US autoplay, Cambridge links, three filters, phone/desktop layout and original topic preserved.');
 }
 
 async function checkLiving({evaluate,call,speechAvailable}){
