@@ -112,7 +112,7 @@ export async function checkCollocations({evaluate,call,wait}){
  await evaluate("document.querySelector('[data-topic=technology]').click();window.qaTechnologyBeforeReload=true");
  await call('Page.reload');
  await wait("!window.qaTechnologyBeforeReload&&!!document.getElementById('topic-title')&&document.getElementById('topic-title').textContent==='Technology'");
- assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 29');
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 58');
  await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
  assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
  assert.equal(await evaluate("(async()=> (await (await fetch('/api/history')).json()).length)()"),historyBefore);
@@ -138,19 +138,25 @@ async function checkTechnology({evaluate,call,speechAvailable}){
  assert.equal(await evaluate("document.getElementById('topic-title').textContent"),'Technology');
  assert.equal(await evaluate("document.querySelector('#topic-menu [aria-current=page]').dataset.topic"),'technology');
  const groups=await evaluate("ECHO_COLLOCATIONS.types.find(t=>t.id==='advantages-disadvantages').topics.find(t=>t.id==='technology').groups");
- assert.deepEqual(groups.map(group=>group.cards.length),[8,14,7]);
+ assert.deepEqual(groups.map(group=>group.cards.length),[8,14,7,10,9,10]);
  const cards=groups.flatMap(group=>group.cards);
- assert.equal(cards.length,29);
- assert.equal(new Set(cards.map(card=>card.english)).size,29);
+ assert.equal(cards.length,58);
+ assert.equal(new Set(cards.map(card=>card.english)).size,57);
  assert.ok(cards.some(card=>card.english==='scroll through my news feeds'));
  assert.ok(groups[1].cards.some(card=>card.english==='improve quality of life'));
  assert.ok(!groups[2].cards.some(card=>card.english==='improve quality of life'));
+ assert.equal(cards.filter(card=>card.english==='improve quality of life').length,2);
+ assert.equal(groups[4].cards[0].english,'become overly dependent on technology');
+ assert.equal(groups[4].cards.at(-1).english,'distract people from their work or studies');
+ assert.equal(groups[5].cards.at(-1).english,'tackle cybercrime effectively');
+ assert.equal(cards.filter(card=>card.sourceEnglish).length,3);
  for(const card of cards){
   assert.equal(await evaluate("document.getElementById('card-english').textContent"),card.english);
   await call('Runtime.evaluate',{expression:"document.getElementById('flashcard').click()",userGesture:true});
   assert.equal(await evaluate("document.getElementById('card-meaning').textContent"),card.meaning);
   assert.equal(await evaluate("document.getElementById('card-ipa').textContent"),card.ipa);
-  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),true);
+  assert.equal(await evaluate("document.getElementById('grammar-notes').hidden"),!card.rule);
+  if(card.sourceEnglish)assert.ok(await evaluate("document.getElementById('grammar-notes').textContent").then(text=>text.includes(card.sourceEnglish)));
   assert.ok(await evaluate("document.querySelectorAll('#cambridge-words a').length>0"));
   if(speechAvailable){
    assert.equal(await evaluate('qaSpeech.at(-1).text'),card.english);
@@ -158,7 +164,7 @@ async function checkTechnology({evaluate,call,speechAvailable}){
   }
   await evaluate("document.getElementById('card-next').click()");
  }
- assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 29');
+ assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 58');
  for(const group of groups){
   await evaluate(`document.getElementById('colloc-group').value=${JSON.stringify(group.id)};document.getElementById('colloc-group').dispatchEvent(new Event('change'));document.getElementById('wordlist-tab').click()`);
   assert.equal(await evaluate("document.querySelectorAll('#wordlist-body tr').length"),group.cards.length);
@@ -175,7 +181,7 @@ async function checkTechnology({evaluate,call,speechAvailable}){
  }
  await evaluate("document.querySelector('[data-topic=studying-abroad]').click()");
  assert.equal(await evaluate("document.getElementById('card-counter').textContent"),'Thẻ 1 / 54');
- console.log('PASS TECHNOLOGY: all 29 source phrases, Vietnamese meanings/IPA, corrected verb classification, US autoplay, Cambridge links, three filters, phone/desktop layout and original topic preserved.');
+ console.log('PASS TECHNOLOGY: 58 cards across six groups, all 29 new image items, corrected dependent/on and natural phrasing with source notes, intentional cross-group duplicate, all meanings/IPA/US autoplay, Cambridge links, six filters and phone/desktop layout.');
 }
 
 async function checkLiving({evaluate,call,speechAvailable}){
