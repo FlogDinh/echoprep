@@ -1,0 +1,87 @@
+{
+  "_source": "Test 1: KEY & EXPLANATION dạng chữ trong [VOL 8] LIS TEST 1.docx. Test 2–8: chép nguyên văn từ ảnh KEY & EXPLANATION trong file DOCX nguồn của từng test (Câu số n: đáp án). Biến thể ghi trong ảnh được giữ; extraVariants chỉ thêm cách viết tương đương về định dạng.",
+  "1": {
+    "1": ["30 March 1988"], "2": ["0903775115"], "3": ["northern"], "4": ["train"], "5": ["hotel"],
+    "6": ["farm"], "7": ["pass"], "8": ["booklet"], "9": ["insurance"], "10": ["internet cafe"],
+    "11": ["C"], "12": ["F"], "13": ["D"], "14": ["A"], "15": ["H"],
+    "16": ["C"], "17": ["B"], "18": ["C"], "19": ["A"], "20": ["C"],
+    "21": ["A"], "22": ["B"], "23": ["C"], "24": ["A"],
+    "25": ["B"], "26": ["H"], "27": ["D"], "28": ["G"], "29": ["E"], "30": ["F"],
+    "31": ["traditional"], "32": ["time"], "33": ["money"], "34": ["confidence"], "35": ["guesses"],
+    "36": ["walking"], "37": ["link"], "38": ["concentration"], "39": ["additional"], "40": ["teachers"]
+  },
+  "2": {
+    "1": ["Elsinore"], "2": ["077896245"], "3": ["waiter"], "4": ["baseball"], "5": ["October"],
+    "6": ["beach"], "7": ["diving"], "8": ["Saturday"], "9": ["six", "6"], "10": ["radio"],
+    "11": ["A"], "12": ["A"], "13": ["C"], "14": ["B"], "15": ["C"], "16": ["A"],
+    "17": ["B/C"], "18": ["B/C"], "19": ["A/E"], "20": ["A/E"],
+    "21": ["B"], "22": ["A"], "23": ["A"], "24": ["B"], "25": ["C"], "26": ["B"],
+    "27": ["E"], "28": ["C"], "29": ["A"], "30": ["F"],
+    "31": ["sharks"], "32": ["cost"], "33": ["catch"], "34": ["ocean"], "35": ["helicopter"],
+    "36": ["rocks"], "37": ["paint"], "38": ["diagram"], "39": ["zoos"], "40": ["public"]
+  },
+  "3": {
+    "1": ["October 15", "October 15th", "15 October", "15th October"], "2": ["hotel"], "3": ["175 dollars"], "4": ["sailing"], "5": ["class"],
+    "6": ["golf"], "7": ["fishing"], "8": ["caravan"], "9": ["massage"], "10": ["menu"],
+    "11": ["H"], "12": ["A"], "13": ["G"], "14": ["C"], "15": ["D"],
+    "16": ["E"], "17": ["F"], "18": ["A"], "19": ["H"], "20": ["B"],
+    "21": ["weather"], "22": ["electricity"], "23": ["explode"], "24": ["C/E"], "25": ["C/E"],
+    "26": ["A"], "27": ["B"], "28": ["C"], "29": ["A"], "30": ["B"],
+    "31": ["gender"], "32": ["attitude"], "33": ["culture"], "34": ["industry"], "35": ["size"],
+    "36": ["efficient"], "37": ["external"], "38": ["larger"], "39": ["benefits"], "40": ["dismiss"]
+  },
+  "4": {
+    "1": ["354 Forest"], "2": ["07817983602"], "3": ["dentist"], "4": ["unfurnished"], "5": ["doubles"],
+    "6": ["1 November", "1st November", "November 1", "November 1st"], "7": ["balcony"], "8": ["garden"], "9": ["station"], "10": ["kitchen"],
+    "11": ["A"], "12": ["C"], "13": ["C"], "14": ["A"], "15": ["B"], "16": ["B"],
+    "17": ["D"], "18": ["F"], "19": ["A"], "20": ["C"],
+    "21": ["Economic History"], "22": ["last September"], "23": ["Politics"], "24": ["Philosophy"], "25": ["lectures difficult"],
+    "26": ["discussion group"], "27": ["not enough tutorials"], "28": ["student services"], "29": ["17th of February", "17 February", "February 17", "17th February"], "30": ["senior advisor"],
+    "31": ["C"], "32": ["A"], "33": ["A"], "34": ["C"], "35": ["B"],
+    "36": ["B"], "37": ["A"], "38": ["B"], "39": ["C"], "40": ["A"]
+  },
+  "5": {
+    "1": ["jacket"], "2": ["desert"], "3": ["space museum"], "4": ["golf"], "5": ["Fearnleigh"],
+    "6": ["1901"], "7": ["fireworks"], "8": ["9286352271"], "9": ["helicopter"], "10": ["sun cream"],
+    "11": ["I"], "12": ["H"], "13": ["D"], "14": ["G"], "15": ["E"], "16": ["A"],
+    "17": ["E"], "18": ["A"], "19": ["B"], "20": ["F"],
+    "21": ["B"], "22": ["C"], "23": ["A"], "24": ["B"], "25": ["A"],
+    "26": ["subtopics"], "27": ["reports"], "28": ["examples"], "29": ["ideas"], "30": ["reading"],
+    "31": ["trade"], "32": ["science"], "33": ["numbers"], "34": ["songs"], "35": ["negative"],
+    "36": ["letter"], "37": ["picture"], "38": ["hospital"], "39": ["emotions"], "40": ["writers"]
+  },
+  "6": {
+    "1": ["bicycle"], "2": ["40"], "3": ["liquids"], "4": ["plastic"], "5": ["Saturdays"],
+    "6": ["storage"], "7": ["Sweden"], "8": ["575"], "9": ["driver"], "10": ["passport"],
+    "11": ["C"], "12": ["H"], "13": ["F"], "14": ["G"], "15": ["E"], "16": ["A"],
+    "17": ["H"], "18": ["F"], "19": ["D"], "20": ["B"],
+    "21": ["B"], "22": ["B"], "23": ["C"], "24": ["A"], "25": ["C"], "26": ["A"],
+    "27": ["B/D"], "28": ["B/D"], "29": ["A/E"], "30": ["A/E"],
+    "31": ["pottery"], "32": ["castle"], "33": ["survey"], "34": ["market"], "35": ["silver coins"],
+    "36": ["textile"], "37": ["water"], "38": ["bridge"], "39": ["lions"], "40": ["emperor"]
+  },
+  "7": {
+    "1": ["Thorn"], "2": ["five days", "5 days"], "3": ["Gold Coast"], "4": ["apartment", "an apartment"],
+    "5": ["C"], "6": ["A"], "7": ["C"], "8": ["B/E/F"], "9": ["B/E/F"], "10": ["B/E/F"],
+    "11": ["cars"], "12": ["1928"], "13": ["cinema"], "14": ["quality"], "15": ["factory"],
+    "16": ["waste"], "17": ["safety"], "18": ["website"], "19": ["customers"], "20": ["money"],
+    "21": ["B"], "22": ["B"], "23": ["C"], "24": ["A"], "25": ["C"], "26": ["C"],
+    "27": ["E"], "28": ["C"], "29": ["D"], "30": ["B"],
+    "31": ["infection"], "32": ["wall"], "33": ["stress"], "34": ["heart"], "35": ["immune"],
+    "36": ["interviews"], "37": ["fountain"], "38": ["furniture"], "39": ["birds"], "40": ["society"]
+  },
+  "8": {
+    "1": ["cousin"], "2": ["service manager"], "3": ["50"], "4": ["private company"], "5": ["mobile"],
+    "6": ["agreement"], "7": ["A"], "8": ["A"], "9": ["A"], "10": ["C"],
+    "11": ["B"], "12": ["C"], "13": ["A"], "14": ["C"], "15": ["B"], "16": ["C"],
+    "17": ["B/D"], "18": ["B/D"], "19": ["A/D"], "20": ["A/D"],
+    "21": ["early evening"], "22": ["seminar group"], "23": ["list of objectives"], "24": ["project outline"], "25": ["checklist"],
+    "26": ["wide reading"], "27": ["design research"], "28": ["a clear argument"], "29": ["theory chapters"], "30": ["studentlink"],
+    "31": ["connected"], "32": ["learning"], "33": ["laboratories"], "34": ["background"], "35": ["passive"],
+    "36": ["personality"], "37": ["self-centred", "self-centered"], "38": ["stimulation"], "39": ["house"], "40": ["C"]
+  },
+  "extraVariants": {
+    "1": {"1": ["30th March 1988", "March 30 1988", "March 30th 1988", "30/3/1988"], "10": ["internet café"]},
+    "3": {"3": ["$175", "175"]}
+  }
+}
