@@ -3,11 +3,13 @@
  const LEGACY='echoprep:listening-vol9-test1:history:v1',CACHE='echoprep:shared-history:cache:v1',QUEUE='echoprep:shared-history:queue:v1';
  function clean(record){
   if(!record||typeof record.id!=='string'||!record.id||record.id.length>100)return null;
-  const module=record.module||'listening',testId=record.testId||1;
-  if(!['listening','reading'].includes(module)||!Number.isInteger(testId)||testId<1||testId>(module==='reading'?12:9)||!record.answers||Array.isArray(record.answers)||typeof record.answers!=='object'||!Number.isFinite(record.elapsed)||record.elapsed<0||!Number.isFinite(Date.parse(record.submittedAt))||record.result?.rows?.length!==40)return null;
+  const module=record.module||'listening',testId=record.testId||1,vol=+(record.vol||9);
+  // Listening has Vol 9 (Tests 1–9) and Vol 8 (Tests 1–8); Reading has Vol 9 only. Old records without vol are Vol 9.
+  const maxTest=module==='reading'?(vol===9?12:0):vol===9?9:vol===8?8:0;
+  if(!['listening','reading'].includes(module)||!Number.isInteger(testId)||testId<1||testId>maxTest||!record.answers||Array.isArray(record.answers)||typeof record.answers!=='object'||!Number.isFinite(record.elapsed)||record.elapsed<0||!Number.isFinite(Date.parse(record.submittedAt))||record.result?.rows?.length!==40)return null;
   const result=record.result;if(!['correct','wrong','blank'].every(k=>Number.isInteger(result[k])&&result[k]>=0&&result[k]<=40)||result.correct+result.wrong+result.blank+(result.unchecked||0)!==40)return null;
   if(!result.rows.every((r,i)=>r.n===i+1&&['correct','wrong','blank','unchecked'].includes(r.status)))return null;
-  return JSON.parse(JSON.stringify({id:record.id,module,vol:9,testId,test:`${module==='reading'?'Reading':'Listening'} - Vol 9 · Test ${testId}`,timerMode:record.timerMode==='timed'?'timed':'elapsed',submittedAt:record.submittedAt,elapsed:record.elapsed,answers:record.answers,result,highlights:record.highlights||{}}));
+  return JSON.parse(JSON.stringify({id:record.id,module,vol,testId,test:`${module==='reading'?'Reading':'Listening'} - Vol ${vol} · Test ${testId}`,timerMode:record.timerMode==='timed'?'timed':'elapsed',submittedAt:record.submittedAt,elapsed:record.elapsed,answers:record.answers,result,highlights:record.highlights||{}}));
  }
  function merge(...lists){const map=new Map();for(const list of lists)for(const value of list){const r=clean(value);if(r)map.set(r.id,r)}return [...map.values()].sort((a,b)=>Date.parse(a.submittedAt)-Date.parse(b.submittedAt)||a.id.localeCompare(b.id));}
  function create({storage,fetch:request=root.fetch?.bind(root),localAPI=false,onChange=()=>{}}={}){
