@@ -44,14 +44,25 @@ export async function checkExamUI({evaluate}){
  assert.equal(await evaluate('[currentQuestion,section].join()'),'14,2');
  assert.match(await evaluate("$('part-banner').textContent"),/Part 2/);
  await evaluate("$('nav-prev').click()");assert.equal(await evaluate('[currentQuestion,section].join()'),'13,1');
- // A–H grid (letter-only map matching) answers through radio cells and survives Part changes.
+ // Listening map/plan labelling: map left, place + number + letter box right.
  await evaluate("clearAttempt();startTest({module:'listening',vol:8,id:1});$('begin-attempt').click();change(2)");
- assert.equal(await evaluate("document.querySelectorAll('#paper .match-grid tbody tr').length"),5);
- assert.equal(await evaluate("document.querySelectorAll('#paper .match-grid thead th').length"),9);
- await evaluate("document.querySelector('[data-grid=\"11\"][value=\"C\"]').click()");
- assert.equal(await evaluate('answers[11]'),'C');assert.equal(await evaluate("$('q11').value"),'C');
+ assert.equal(await evaluate("document.querySelectorAll('#paper .map-question .map-figure img.source-image').length"),1);
+ assert.deepEqual(await evaluate("[...document.querySelectorAll('#paper .map-answers .map-row')].map(r=>r.querySelector('.map-number').textContent+' '+r.querySelector('.map-place').textContent)"),['11 seating area','12 cushions','13 computer bench','14 café bar','15 newspapers']);
+ assert.equal(await evaluate("document.querySelectorAll('#paper .match-grid,#paper .map-question + .bank').length"),0);
+ assert.equal(await evaluate("(()=>{const f=document.querySelector('.map-figure').getBoundingClientRect(),a=document.querySelector('.map-answers').getBoundingClientRect();return a.left>f.right-1})()"),true);
+ await evaluate("$('q11').value='C';$('q11').dispatchEvent(new Event('input'))");
+ assert.equal(await evaluate('answers[11]'),'C');
  assert.equal(await evaluate("document.querySelector('[data-jump=\"11\"]').classList.contains('filled')"),true);
- await evaluate("change(1);change(2)");assert.equal(await evaluate("document.querySelector('[data-grid=\"11\"][value=\"C\"]').checked"),true);
+ await evaluate("change(1);change(2)");assert.equal(await evaluate("$('q11').value"),'C');
+ // Letter-only matching without a picture ("Which paragraph…") keeps the A–H grid.
+ const gridTest=await evaluate("(()=>{for(const [id,t] of Object.entries(catalog.reading[9]))for(let sec=1;sec<=3;sec++){const d=document.createElement('div');d.innerHTML=t.sections[sec-1].html;const bank=[...d.querySelectorAll('.bank')].find(b=>[...b.querySelectorAll('[data-token]')].every(x=>x.textContent.replace(/\\s+/g,'')===x.dataset.token+x.dataset.token)&&!d.querySelector('img.source-image'));if(bank)return [+id,sec]}return null})()");
+ if(gridTest){
+  await evaluate(`clearAttempt();startTest({module:'reading',vol:9,id:${gridTest[0]}});$('begin-attempt').click();change(${gridTest[1]})`);
+  assert.ok(await evaluate("document.querySelectorAll('#paper .match-grid tbody tr').length>0"));
+  await evaluate("(()=>{const r=document.querySelector('#paper [data-grid]');r.click();window.qaGrid=[r.dataset.grid,r.value]})()");
+  assert.equal(await evaluate('answers[qaGrid[0]]===qaGrid[1]&&$("q"+qaGrid[0]).value===qaGrid[1]'),true);
+  await evaluate("clearAttempt();startTest({module:'listening',vol:8,id:1});$('begin-attempt').click();change(2);$('q11').value='C';$('q11').dispatchEvent(new Event('input'))");
+ }
  // Worded options use drag-and-drop gaps beside the option list; gap boxes show their number.
  await evaluate('change(3)');
  assert.equal(await evaluate("document.querySelectorAll('#paper .drag-layout .drag-targets [data-drop]').length"),6);
@@ -59,8 +70,8 @@ export async function checkExamUI({evaluate}){
  await evaluate("change(1)");assert.equal(await evaluate("document.querySelector('#paper input.gap').placeholder"),'1');
  // Review marks the right grid cell after submission.
  await evaluate("(async()=>{await finishAttempt();change(2)})()");
- assert.equal(await evaluate("document.querySelector('[data-grid=\"11\"][value=\"C\"]').closest('td').classList.contains('correct-cell')"),true);
+ assert.match(await evaluate("document.querySelector('#paper .map-row .answer-correction').textContent"),/✓/);
  assert.equal(await evaluate("document.body.classList.contains('exam-mode')"),false);
- assert.equal(await evaluate("document.querySelectorAll('#paper .match-grid .explanation-button').length"),5);
- console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, A–H grid answers and review cells, drag-and-drop gaps and numbered answer boxes.');
+ assert.equal(await evaluate("document.querySelectorAll('#paper .map-row .explanation-button').length"),5);
+ console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, map left/answers right with review marks, A–H grid for Which paragraph, drag-and-drop gaps and numbered answer boxes.');
 }
