@@ -20,5 +20,12 @@
   }
   if(changed){selection.removeAllRanges();apply(paper,saved)}return changed;
  }
- root.EchoHighlight={apply,capture,merge};
+ // Clears the whole saved highlight that the given mark belongs to (right-click → Xoá tô vàng).
+ function remove(paper,saved,mark){
+  const block=mark?.closest('[data-highlight-block]');if(!block||!paper.contains(block))return false;let offset=0,start=null,end=null;
+  for(const node of nodes(block)){if(mark.contains(node)){if(start===null)start=offset;end=offset+node.length}offset+=node.length}
+  if(start===null)return false;const id=block.dataset.highlightBlock;saved[id]=merge(saved[id]||[]).filter(([a,b])=>b<=start||a>=end);if(!saved[id].length)delete saved[id];
+  apply(paper,saved);return true;
+ }
+ root.EchoHighlight={apply,capture,merge,remove};
 })(window);
