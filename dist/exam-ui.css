@@ -1,0 +1,141 @@
+/* Computer-delivered IELTS look for the practice screens (index.html only):
+   dark top bar, Part banner, plain split panes, A–H answer grids, black question squares. */
+:root{--cd-bar:#262626;--cd-line:#c4c4c4;--cd-text:#111;--cd-active:#dff0fb;--cd-active-line:#9cc6e6;--cd-blue:#2f7fd1}
+body{font-family:Arial,Helvetica,sans-serif;color:var(--cd-text);background:#ececec}
+
+/* Top bar */
+header{background:linear-gradient(#444,#222);border-bottom:1px solid #000;padding:6px 14px;gap:12px;color:#eee}
+.brand{color:#fff;font-size:17px}
+.breadcrumb{color:#d4d4d4;font-size:13px}.breadcrumb span{color:#8c8c8c}
+.timer{margin:0 auto;color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px}
+header button{background:linear-gradient(#fdfdfd,#d6d6d6);border:1px solid #777;border-radius:4px;color:#111;padding:4px 12px;font-size:13px;line-height:1.4}
+header button:hover{background:linear-gradient(#fff,#e6e6e6)}
+header .primary{background:linear-gradient(#5aa5ef,#2f7fd1);border-color:#1d5ea6;color:#fff}
+header .primary:hover{background:linear-gradient(#6cb1f3,#3a8ade)}
+header .primary:disabled{opacity:.55}
+#abort-attempt{color:#b00000}
+
+/* During an attempt the screen is the test itself: no library sidebar or page title. */
+body.exam-mode aside,body.exam-mode .test-heading{display:none}
+body.exam-mode .workspace{display:block;max-width:none}
+body.exam-mode:not(.reading-mode) main{padding:10px 14px 20px}
+body.exam-mode:not(.reading-mode) #paper{max-width:1100px;margin:0 auto}
+body.exam-mode:not(.reading-mode) #part-banner{max-width:1100px;margin:0 auto 10px}
+
+/* Part banner */
+#part-banner{background:#fff;border:1px solid var(--cd-line);padding:10px 16px;margin:0 0 10px}
+#part-banner h2{margin:0 0 3px;font-size:17px}
+#part-banner p{margin:0;font-size:14px}
+body.reading-mode #part-banner,body.review-mode #part-banner{flex-shrink:0;margin:0;border-width:0 0 1px}
+
+/* Question paper */
+#paper{border-radius:0;border:1px solid var(--cd-line);box-shadow:none;padding:16px 22px;line-height:1.6;font-size:15px;container-type:inline-size}
+#paper p{margin:10px 0}
+.subheading{font-size:15px;margin-top:22px!important}
+.instruction{color:var(--cd-text);line-height:1.55}
+#paper .qnum,#transcript-body .qnum{background:none;color:var(--cd-text);border-radius:0;min-width:0;height:auto;padding:0;margin-right:8px;font-weight:700;font-size:15px}
+/* The question number sits inside the answer box, as in the test. */
+#paper .qnum:has(+ .gap),.inline-match>.qnum,.matching-row>.qnum{display:none}
+.gap{width:150px;height:27px;border:1px solid #3a3a3a;border-radius:2px;background:#fff;text-align:center;padding:2px 6px;margin:0 4px;font-size:15px}
+.gap::placeholder{color:#222;font-weight:700;opacity:1}
+.gap:focus{background:#fff;border-color:var(--cd-blue);box-shadow:0 0 0 2px #9fc7ef}
+.answer-select{border:1px solid #3a3a3a;border-radius:2px;padding:3px 6px;font-size:14px;background:#fff;color:var(--cd-text)}
+.inline-match{margin:2px 3px}
+.inline-match select{max-width:240px;min-width:110px}
+.source-table td{border-color:#9a9a9a}
+
+/* Choice questions: plain radio lists; the question being worked on is boxed in light blue. */
+.choice-block{margin:12px 0;padding:8px 12px;border:1px solid transparent}
+.choice-block h3{font-size:15px;font-weight:400;margin:0 0 6px}
+.choice-block h3 .qnum{font-weight:700}
+.choice{border:0;border-radius:0;padding:3px 4px;margin:1px 0;font-size:15px;gap:10px;align-items:center}
+.choice:has(input:checked){background:none}
+.choice input{margin:0;accent-color:var(--cd-blue);width:15px;height:15px}
+.letter{color:var(--cd-text);font-weight:700}
+.choice-block:focus-within,#paper p:focus-within,.matching-row:focus-within,.match-grid tbody tr:focus-within{background:var(--cd-active);outline:1px solid var(--cd-active-line)}
+
+/* A–H grid (maps, plans, which paragraph…) */
+.match-grid{border-collapse:collapse;width:auto;margin:12px 0 18px;font-size:14px;background:#fff}
+.match-grid th,.match-grid td{border:1px solid #9a9a9a;padding:6px 9px;color:var(--cd-text)}
+.match-grid thead th{background:#f2f2f2;text-align:center;font-weight:700;min-width:32px}
+.match-grid .grid-label{text-align:left;font-weight:400;min-width:200px;max-width:360px;position:relative;line-height:1.4}
+.match-grid .grid-label .qnum{margin-right:6px}
+.match-grid td{text-align:center;cursor:pointer}
+.match-grid td input{width:16px;height:16px;margin:0;accent-color:var(--cd-blue);cursor:pointer}
+.grid-select{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.review-mode .match-grid .correct-cell{background:#d7f3dd}
+.review-mode .match-grid .wrong-cell{background:#fbdcdc}
+.match-grid .answer-correction{display:block;font-size:13px;margin-top:4px}
+.match-grid .explanation-button{font-size:12px;padding:2px 6px;margin-top:4px}
+
+/* Drag-and-drop matching: gaps on the left, the option list on the right. */
+.drag-layout{display:grid;gap:10px 28px;margin:10px 0 16px}
+@container (min-width:600px){.drag-layout{grid-template-columns:minmax(0,1.4fr) minmax(190px,1fr);align-items:start}}
+.drag-targets .matching-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;border:0;background:none;padding:5px 4px;margin:4px 0}
+#paper .drag-targets .matching-row select{display:inline-block;width:auto;min-width:150px;max-width:100%;margin:0;border:1px solid #3a3a3a;border-radius:2px;padding:4px 6px;font-size:14px;text-align:center}
+.drag-options{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:0}
+.drag-options .token{border:1px solid #b3b3b3;border-radius:3px;background:linear-gradient(#fff,#e9e9e9);text-align:left;padding:4px 10px;font-size:14px;color:var(--cd-text);cursor:grab}
+.drag-options .token b{color:var(--cd-text)}
+.drag-options .token.selected{border-color:var(--cd-blue);background:var(--cd-active)}
+#paper .matching-row{border-radius:0}
+
+/* Reading: two plain panes with a divider */
+body.reading-mode #transcript-pane,body.review-mode #transcript-pane{background:#fff;border-right:6px solid #d6d6d6}
+body.reading-mode .transcript-heading{padding:12px 22px 4px;border-bottom:0}
+body.reading-mode .transcript-heading span{display:none}
+body.reading-mode .transcript-heading h2{font-size:17px}
+body.reading-mode #transcript-body{padding:6px 22px 16px;font-size:15px}
+body.reading-mode .transcript-segment{padding:4px 0;border:0;line-height:1.6;margin-bottom:8px}
+body.reading-mode #paper{padding:14px 22px}
+mark.keyword-highlight{background:#ffef3d;border-radius:0}
+
+/* Right-click menu for highlighting */
+#highlight-menu{position:fixed;z-index:60;display:flex;flex-direction:column;min-width:170px;padding:3px 0;background:#fff;border:1px solid #8a8a8a;box-shadow:2px 3px 10px #0003;font-family:Arial,Helvetica,sans-serif}
+#highlight-menu[hidden]{display:none}
+#highlight-menu button{position:relative;border:0;border-radius:0;background:none;text-align:left;padding:6px 14px 6px 32px;font-size:13px;color:var(--cd-text)}
+#highlight-menu button:hover:not(:disabled),#highlight-menu button:focus-visible{background:var(--cd-active);outline:0}
+#highlight-menu button:disabled{color:#9a9a9a;opacity:1}
+#highlight-menu button::before{content:'';position:absolute;left:10px;top:50%;width:13px;height:13px;transform:translateY(-50%)}
+#highlight-menu [data-highlight-action=highlight]::before{background:#ffef3d;border:1px solid #c9b100}
+#highlight-menu [data-highlight-action=clear]::before{border:1px solid #999;background:linear-gradient(135deg,transparent 45%,#c00 45%,#c00 55%,transparent 55%)}
+#highlight-menu [data-highlight-action=clear-all]::before{border:1px dashed #999}
+
+/* Bottom bar: Review flag, Part 1–4 question squares, previous/next arrows */
+footer{background:#fff;border-top:1px solid #9a9a9a;box-shadow:none;padding:6px 12px 8px}
+.audio-top,.audio-player{max-width:none}
+.audio-top select{background:#f1f1f1}
+.file-button{border-color:#9a9a9a;border-radius:3px;color:#1d5ea6}
+#audio-status{margin:4px 0 6px}
+#questions{max-width:none;gap:12px;align-items:center;padding:4px 0 2px;overflow:visible}
+.question-parts{display:flex;gap:14px;flex-wrap:nowrap;align-items:center;flex:1;min-width:0;overflow-x:auto;padding:2px 0}
+#questions .question-group{border:0;border-radius:0;padding:0;gap:1px;flex-shrink:0}
+#questions .question-group.active .part-label{color:var(--cd-blue)}
+.part-label{font-weight:700;font-size:13px;margin-right:6px;white-space:nowrap}
+#questions button[data-jump]{width:23px;height:25px;border-radius:0;background:#2b2b2b;color:#fff;border:1px solid #000;font-size:12px;font-weight:700;box-shadow:none;position:relative}
+#questions button[data-jump]:hover{background:#4a4a4a}
+#questions button[data-jump].filled{background:#fff;color:var(--cd-text);border-color:#555;text-decoration:underline;text-underline-offset:3px}
+#questions button[data-jump].current{background:#7fb8ec;color:#000;border-color:var(--cd-blue)}
+#questions button[data-jump].flagged{border-radius:50%}
+#questions button[data-jump].correct{background:#d7f3dd!important;color:#14532d!important;border-color:#4b9b62}
+#questions button[data-jump].wrong{background:#fbdcdc!important;color:#991b1b!important;border-color:#c45555}
+#questions button[data-jump].blank{background:#e6e6e6;color:#555;border-color:#aaa}
+#questions .active button:first-child:not(.filled){box-shadow:none}
+.review-flag{display:flex;align-items:center;gap:5px;font-size:13px;white-space:nowrap;flex-shrink:0}
+.review-flag input{width:15px;height:15px;margin:0}
+.nav-arrows{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+#questions .nav-arrows button{width:42px;height:32px;padding:0;border-radius:3px;background:#2b2b2b;border-color:#000;color:#fff;font-size:18px;line-height:1}
+#questions .nav-arrows button:hover{background:#4a4a4a}
+.review-mode .review-flag{display:none}
+
+@media(max-width:700px){
+ header{padding:6px 8px;gap:6px}
+ .timer{font-size:13px}
+ #paper{padding:12px 12px}
+ .gap{width:120px}
+ .question-parts{gap:10px}
+ #questions button[data-jump]{width:23px;height:23px;font-size:11px}
+ .match-grid .grid-label{min-width:130px}
+ #questions .nav-arrows button{width:36px;height:30px}
+}
+.passage-heading{background:#fff!important;border:1px dashed #7a7a7a;border-radius:0!important;font-weight:700}
+.passage-heading select{border:1px solid #3a3a3a!important;border-radius:2px!important}

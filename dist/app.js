@@ -57,7 +57,10 @@ $('time-limit-continue').onclick=()=>{
  $('time-mode').value='elapsed';$('time-limit-dialog').close();clock();
 };
 $('time-limit-submit').onclick=()=>finishAttempt(true);
-function count(){const n=Object.values(answers).filter(Boolean).length;$('answered').textContent=`${n} / 40`;$('progress').style.width=`${n/40*100}%`;document.querySelectorAll('[data-jump]').forEach(b=>{b.classList.toggle('filled',!!answers[b.dataset.jump]);if(result)b.classList.add(result.rows[b.dataset.jump-1].status)});}
+function count(){const n=Object.values(answers).filter(Boolean).length;$('answered').textContent=`${n} / 40`;$('progress').style.width=`${n/40*100}%`;document.querySelectorAll('[data-jump]').forEach(b=>{const q=+b.dataset.jump;b.classList.toggle('filled',!!answers[q]);b.classList.toggle('current',q===currentQuestion);b.classList.toggle('flagged',flagged.has(q));if(q===currentQuestion)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');if(result)b.classList.add(result.rows[q-1].status)});if($('review-flag')){$('review-flag').checked=flagged.has(currentQuestion);$('review-flag').disabled=submitted;}}
+// Exam-style navigation state: the question being worked on and questions marked with Review.
+let currentQuestion=1;const flagged=new Set();
+function setCurrentQuestion(n){if(!Number.isInteger(n)||n<1||n>40)return;currentQuestion=n;count();}
 function options(q,multi=false){return `<div class="choice-block" id="q${q.n}"><h3><span class="qnum">${multi?q.n+'–'+(q.n+choiceSize(q)-1):q.n}</span>${esc(q.prompt)}</h3>${multi?`<p class="instruction">Choose ${choiceSize(q)===3?'THREE':'TWO'} correct answers.</p>`:''}${q.options.map((t,i)=>{const l=q.values?.[i]||String.fromCharCode(65+i);const checked=multi?Array.from({length:choiceSize(q)},(_,j)=>answers[q.n+j]).includes(l):answers[q.n]===l;return `<label class="choice"><input type="${multi?'checkbox':'radio'}" name="q${q.n}" data-choice="${q.n}" data-multi="${multi}" value="${l}" ${checked?'checked':''} ${submitted?'disabled':''}>${q.values?'':`<span class="letter">${l}</span>`}${esc(t)}</label>`}).join('')}</div>`}
 function updateTestSelection(){document.querySelectorAll('[data-start-test]').forEach(el=>{const selected=!inLibrary&&+el.dataset.startTest===activeTest&&(el.dataset.module||'listening')===activeModule;el.classList.toggle('test-selected',selected);if(el.closest('aside')){el.style.background=selected?'#e3ecff':'#ffffff';el.style.color=selected?'#1d4ed8':'#64748b';el.style.borderColor=selected?'#8eaeff':'#dce3ed';el.style.fontWeight=selected?'700':'500';el.style.boxShadow=selected?'inset 3px 0 0 #1d4ed8':'none';}if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});}
 function render(){
@@ -71,15 +74,19 @@ function render(){
  body=body.replace(/<div data-render-choice="(\d+)"><\/div>/g,(_,n)=>options(TEST.singles.find(q=>q.n===+n)));
  body=body.replace(/<div data-render-pair="(\d+)"><\/div>/g,(_,n)=>options(TEST.pairs.find(q=>q.n===+n),true));
  $('breadcrumb').textContent=`${moduleName()} - Vol ${activeVol} / Test ${activeTest}`;document.querySelector('.test-heading .pill').textContent=`Vol ${activeVol}`;document.querySelector('.test-heading h1').textContent=`${moduleName()} Test ${activeTest}`;document.querySelector('#restart-dialog h2').textContent=`Làm lại Test ${activeTest}?`;
- $('paper').innerHTML=`<div class="paper-heading"><h2>${activeModule==='reading'?'Passage':'Section'} ${section}</h2><span>${activeModule==='reading'?'Đọc & trả lời':section===3?'Chọn đáp án':section===2?'Điền từ & sơ đồ':'Điền từ'}</span></div>${body}`;
- renderPassage();
- document.querySelectorAll('[data-q]').forEach(el=>{el.value=answers[el.dataset.q]||'';el.disabled=submitted;el.id=el.id||`q${el.dataset.q}`;el.addEventListener('input',()=>{answers[el.dataset.q]=el.value;document.querySelectorAll(`[data-q="${el.dataset.q}"]`).forEach(other=>other.value=el.value);count()})});
+ $('paper').innerHTML=body;enhancePaper();
+ renderPassage();renderPartBanner();
+ document.body.classList.toggle('exam-mode',attemptStarted&&!submitted&&!inLibrary);
+ {const [first,last]=groups()[section-1];if(currentQuestion<first||currentQuestion>last)currentQuestion=first;}
+ document.querySelectorAll('[data-q]').forEach(el=>{el.value=answers[el.dataset.q]||'';el.disabled=submitted;el.id=el.id||`q${el.dataset.q}`;el.addEventListener('input',()=>{answers[el.dataset.q]=el.value;document.querySelectorAll(`[data-q="${el.dataset.q}"]`).forEach(other=>other.value=el.value);syncGrid(el.dataset.q);count()})});
+ document.querySelectorAll('#paper [data-grid]').forEach(el=>{el.checked=answers[el.dataset.grid]===el.value;el.disabled=submitted;el.addEventListener('change',()=>{const n=el.dataset.grid;answers[n]=el.value;document.querySelectorAll(`[data-q="${n}"]`).forEach(other=>other.value=el.value);setCurrentQuestion(+n)})});
+ document.querySelectorAll('#paper input.gap').forEach(el=>{el.placeholder=el.dataset.q});
  document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('change',()=>{const n=+el.dataset.choice;if(el.dataset.multi==='true'){const values=[...document.querySelectorAll(`[data-choice="${n}"]:checked`)].map(x=>x.value);const size=choiceSize(TEST.pairs.find(p=>p.n===n));if(values.length>size){el.checked=false;return}for(let i=0;i<size;i++)answers[n+i]=values[i]||''}else answers[n]=el.value;count()}));
  document.querySelectorAll('[data-token]').forEach(el=>{el.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',el.dataset.token));el.addEventListener('click',()=>{chosen=el.dataset.token;document.querySelectorAll('[data-token]').forEach(x=>x.classList.toggle('selected',x===el))})});
- document.querySelectorAll('[data-drop]').forEach(el=>{el.addEventListener('dragover',e=>{if(!submitted)e.preventDefault()});const set=v=>{if(submitted)return;const select=el.querySelector('select');if(![...select.options].some(o=>o.value===v))return;answers[el.dataset.drop]=v;select.value=v;document.querySelectorAll(`[data-q="${el.dataset.drop}"]`).forEach(other=>other.value=v);count()};el.addEventListener('drop',e=>{e.preventDefault();set(e.dataTransfer.getData('text/plain'))});el.addEventListener('click',e=>{if(e.target.tagName!=='SELECT'&&chosen)set(chosen)})});
- $('questions').innerHTML=groups().map(([first,last],i)=>`<div class="question-group ${i+1===section?'active':''}" role="group" aria-label="${activeModule==='reading'?'Passage':'Section'} ${i+1}" data-group="${i+1}">${Array.from({length:last-first+1},(_,j)=>`<button data-jump="${first+j}">${first+j}</button>`).join('')}</div>`).join('');count();
+ document.querySelectorAll('[data-drop]').forEach(el=>{el.addEventListener('dragover',e=>{if(!submitted)e.preventDefault()});const set=v=>{if(submitted)return;const select=el.querySelector('select');if(![...select.options].some(o=>o.value===v))return;answers[el.dataset.drop]=v;select.value=v;document.querySelectorAll(`[data-q="${el.dataset.drop}"]`).forEach(other=>other.value=v);currentQuestion=+el.dataset.drop;count()};el.addEventListener('drop',e=>{e.preventDefault();set(e.dataTransfer.getData('text/plain'))});el.addEventListener('click',e=>{if(e.target.tagName!=='SELECT'&&chosen)set(chosen)})});
+ $('questions').innerHTML=`<label class="review-flag" title="Đánh dấu câu hiện tại để xem lại"><input type="checkbox" id="review-flag"> Review</label><div class="question-parts">${groups().map(([first,last],i)=>`<div class="question-group ${i+1===section?'active':''}" role="group" aria-label="Part ${i+1}" data-group="${i+1}"><span class="part-label">Part ${i+1}</span>${Array.from({length:last-first+1},(_,j)=>`<button data-jump="${first+j}" aria-label="Câu ${first+j}">${first+j}</button>`).join('')}</div>`).join('')}</div><div class="nav-arrows"><button type="button" id="nav-prev" aria-label="Câu trước">&#8592;</button><button type="button" id="nav-next" aria-label="Câu sau">&#8594;</button></div>`;count();
  if(submitted){
-  document.querySelectorAll('#paper [data-q]').forEach(el=>{if(el.closest('p'))el.closest('p').insertAdjacentHTML('beforeend',explanationButton(+el.dataset.q))});
+  document.querySelectorAll('#paper [data-q]').forEach(el=>{el.closest('p,.grid-label')?.insertAdjacentHTML('beforeend',explanationButton(+el.dataset.q))});
   document.querySelectorAll('#paper .choice-block').forEach(el=>{const n=+el.id.slice(1);el.insertAdjacentHTML('beforeend',Array.from({length:TEST.pairs.some(p=>p.n===n)?choiceSize(TEST.pairs.find(p=>p.n===n)):1},(_,i)=>explanationButton(n+i)).join(''))});
   if(isVol9Test1()&&section===2)$('paper').insertAdjacentHTML('beforeend','<div class="map-explanations">'+[18,19,20].map(explanationButton).join('')+'</div>');
  }
@@ -108,7 +115,10 @@ function loadAudio(){
  audio.onloadedmetadata=()=>{audio.currentTime=Math.min(positions[audioSection]||0,Number.isFinite(audio.duration)?audio.duration:Infinity);audio.playbackRate=+$('speed').value;};
 }
 $('audio-section').onchange=()=>{rememberAudioPosition();audio.pause();audioSection=+$('audio-section').value;loadAudio();};
-$('questions').addEventListener('click',e=>{const b=e.target.closest('[data-jump]');if(!b)return;const n=+b.dataset.jump,s=questionSection(n);if(s!==section)change(s);const id=questionBase(n);const el=$('q'+id);el?.scrollIntoView({behavior:'smooth',block:'center'});if(el?.matches('input,select'))el.focus({preventScroll:true});if(submitted)showExplanation(n)});
+$('questions').addEventListener('change',e=>{if(e.target.id!=='review-flag')return;if(e.target.checked)flagged.add(currentQuestion);else flagged.delete(currentQuestion);count();});
+$('paper').addEventListener('focusin',e=>{const el=e.target.closest?.('[data-q],[data-choice],[data-grid]');if(el)setCurrentQuestion(+(el.dataset.q||el.dataset.grid||el.dataset.choice));});
+function jumpTo(n){document.querySelector(`[data-jump="${n}"]`)?.click();}
+$('questions').addEventListener('click',e=>{if(e.target.closest('#nav-prev')){jumpTo(Math.max(1,currentQuestion-1));return}if(e.target.closest('#nav-next')){jumpTo(Math.min(40,currentQuestion+1));return}const b=e.target.closest('[data-jump]');if(!b)return;const n=+b.dataset.jump,s=questionSection(n);currentQuestion=n;count();if(s!==section)change(s);const id=questionBase(n);const el=$('q'+id);el?.scrollIntoView({behavior:'smooth',block:'center'});if(el?.matches('input,select'))el.focus({preventScroll:true});if(submitted)showExplanation(n)});
 $('files').addEventListener('change',e=>{const files=[...e.target.files];let assigned=0;files.forEach(f=>{const match=audioFileSection(f.name);if(match?.test&&match.test!==activeTest)return;let n=match?match.section:files.length===1?audioSection:null;if(!n)return;if(sources[n])URL.revokeObjectURL(sources[n]);positions[n]=0;sources[n]=URL.createObjectURL(f);assigned++});loadAudio();if(!assigned)$('audio-status').textContent=`Chọn từng file để gán cho section đang chọn trên thanh nghe, hoặc dùng tên ${audioFileHint(1)} … ${audioFileHint(4)}.`});
 $('speed').onchange=()=>audio.playbackRate=+$('speed').value;$('back5').onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-5);$('forward5').onclick=()=>{if(Number.isFinite(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+5)};
 audio.onerror=()=>$('audio-status').textContent=`Không phát được audio Section ${audioSection}. Hãy chọn lại file nghe cho section này.`;
@@ -124,9 +134,10 @@ function renderReview(){
  if($('retry-save'))$('retry-save').onclick=async()=>{await saveAttempt();renderReview();renderResults();};
  $('review-retry').onclick=()=>$('restart-dialog').showModal();if($('review-return'))$('review-return').onclick=returnCurrent;
  document.querySelectorAll('#paper [data-q]').forEach(el=>{
-  const n=+el.dataset.q,row=result.rows[n-1], container=el.closest('p')||el.closest('.map-slot');
+  const n=+el.dataset.q,row=result.rows[n-1], container=el.closest('p,.grid-label,.map-slot');
   container.classList.add('review-question');container.dataset.reviewQuestion=n;if(el.previousElementSibling?.classList.contains('qnum'))el.previousElementSibling.dataset.reviewQuestion=n;
-  if(el.closest('p'))el.insertAdjacentHTML('afterend',`<span class="answer-correction ${row.status}">${row.status==='correct'?'✓':row.status==='unchecked'?' · Chưa có đáp án nguồn':' → '+esc(row.expected)}</span>`);
+  const correctLetters=(TEST.answers[n]||[]).flatMap(v=>v.split('/'));document.querySelectorAll(`#paper [data-grid="${n}"]`).forEach(radio=>{radio.closest('td').classList.toggle('correct-cell',correctLetters.includes(radio.value));radio.closest('td').classList.toggle('wrong-cell',radio.checked&&!correctLetters.includes(radio.value)&&TEST.hasAnswerKey!==false)});
+  if(el.closest('p,.grid-label'))el.insertAdjacentHTML('afterend',`<span class="answer-correction ${row.status}">${row.status==='correct'?'✓':row.status==='unchecked'?' · Chưa có đáp án nguồn':' → '+esc(row.expected)}</span>`);
  });
  document.querySelectorAll('#paper .choice-block').forEach(el=>{const n=+el.id.slice(1);el.dataset.reviewQuestion=n;el.classList.add('review-question');const rows=result.rows.slice(n-1,TEST.pairs.some(p=>p.n===n)?n-1+choiceSize(TEST.pairs.find(p=>p.n===n)):n);el.insertAdjacentHTML('beforeend',`<div class="choice-feedback">${rows.map(r=>`<span class="answer-correction ${r.status}">Câu ${r.n}: ${esc(r.value)||'—'} → <strong>${esc(r.expected)}</strong> ${r.status==='correct'?'✓':r.status==='unchecked'?'?':'✕'}</span>`).join('')}</div>`);const correct=(TEST.answers[n]||[]).flatMap(v=>v.split('/'));el.querySelectorAll('.choice').forEach(label=>{const input=label.querySelector('input');if(correct.includes(input.value))label.classList.add('correct-option');else if(input.checked&&TEST.hasAnswerKey!==false)label.classList.add('wrong-option')})});
 }
@@ -151,7 +162,7 @@ function renderResults(){
  $('review').onclick=()=>{$('results').hidden=true;$('review-shell').hidden=false;};$('restart').onclick=()=>$('restart-dialog').showModal();$('results-history').onclick=showHistory;if($('return-current'))$('return-current').onclick=returnCurrent;
 }
 function showHistory(){
- $('source-notes').hidden=true;
+ $('part-banner').hidden=true;document.body.classList.remove('exam-mode');closeHighlightMenu();$('source-notes').hidden=true;
  $('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');
  $('library').hidden=true;
  document.body.classList.remove('review-mode','reading-mode');$('review-shell').hidden=true;$('review-toolbar').hidden=true;rememberAudioPosition();audio.pause();$('paper').hidden=true;$('results').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('history').hidden=false;
@@ -198,16 +209,66 @@ async function finishAttempt(fromTimeLimit=false){
  section=1;selectedQuestion=null;showExam();
 }
 $('finish').onclick=()=>finishAttempt();
-function clearAttempt(){timeLimitPending=false;$('time-limit-dialog').close();chosen='';unloadAudio();audioSection=1;highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
+function clearAttempt(){closeHighlightMenu();flagged.clear();currentQuestion=1;timeLimitPending=false;$('time-limit-dialog').close();chosen='';unloadAudio();audioSection=1;highlights={};attemptStarted=false;answers={};result=null;submitted=false;started=Date.now();elapsed=0;positions={};reviewingId=null;reviewBackup=null;storageNotice='';pendingSave=null;section=1;selectedQuestion=null;$('explanation-sheet').hidden=true;$('results').hidden=true;}
 function startTest(selection){const id=typeof selection==='object'?selection.id:selection,nextModule=typeof selection==='object'?selection.module:activeModule,nextVol=typeof selection==='object'?+(selection.vol||9):activeVol;clearAttempt();const nextKey=`${nextModule}:${nextVol}:${id}`;if(audioKey()!==nextKey){audioByTest[audioKey()]=sources;sources=audioByTest[nextKey]||{};}activeModule=nextModule;activeVol=nextVol;timerMode='elapsed';activeTest=id;TEST=catalog[activeModule][activeVol][id];inLibrary=false;pendingRetry=null;pendingTest=null;showExam();clock();$('paper').scrollTop=0;$('transcript-body').scrollTop=0;window.scrollTo({top:0});}
-function showLibrary(){$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
+function showLibrary(){$('part-banner').hidden=true;document.body.classList.remove('exam-mode');closeHighlightMenu();$('source-notes').hidden=true;audio.pause();renderMenu();inLibrary=true;$('start-panel').hidden=true;$('test-history').hidden=true;document.body.classList.remove('ready-mode');updateTestSelection();document.body.classList.remove('review-mode','reading-mode');$('library').hidden=false;$('review-shell').hidden=true;$('review-toolbar').hidden=true;$('paper').hidden=true;$('results').hidden=true;$('history').hidden=true;document.querySelector('.test-heading').hidden=true;document.querySelector('footer').hidden=true;$('submit').hidden=true;$('abort-attempt').hidden=true;}
 function navigateSelection(selection){if(selection?.view==='collocations'){location.assign('collocations.html');}else if(selection)startTest(selection);else showLibrary();}
 function requestLeave(testId=null){pendingTest=testId;if(attemptStarted&&!submitted&&!inLibrary){$('abort-dialog').showModal();}else navigateSelection(testId);}
-let suppressHighlightClick=false;
-$('paper').addEventListener('click',event=>{if(suppressHighlightClick){event.preventDefault();event.stopPropagation();suppressHighlightClick=false;}},true);
-function captureKeywords(root,key){if(!attemptStarted||submitted||inLibrary)return;const current=highlights[key]||(highlights[key]={});if(EchoHighlight.capture(root,window.getSelection(),current)){suppressHighlightClick=true;setTimeout(()=>{suppressHighlightClick=false;},0);}}
-$('paper').addEventListener('mouseup',()=>captureKeywords($('paper'),section));
-$('transcript-body').addEventListener('mouseup',()=>{if(activeModule==='reading')captureKeywords($('transcript-body'),'passage:'+section)});
+function captureKeywords(root,key){if(!attemptStarted||submitted||inLibrary)return false;const current=highlights[key]||(highlights[key]={});return EchoHighlight.capture(root,window.getSelection(),current);}
+// As in the computer-delivered test: select text, right-click, then choose "Tô vàng" (no highlight on plain selection).
+let highlightContext=null;
+const highlightKey=root=>root===$('paper')?section:'passage:'+section;
+const canHighlight=root=>attemptStarted&&!submitted&&!inLibrary&&(root===$('paper')||activeModule==='reading');
+function closeHighlightMenu(){$('highlight-menu').hidden=true;highlightContext=null;}
+function openHighlightMenu(root,x,y,mark){
+ const selection=getSelection(),range=selection.rangeCount&&!selection.isCollapsed?selection.getRangeAt(0):null;
+ const hasSelection=!!range&&root.contains(range.commonAncestorContainer)&&!!selection.toString().trim();
+ if(!hasSelection&&!mark)return false;
+ const key=highlightKey(root);highlightContext={root,key,range:hasSelection?range.cloneRange():null,mark};
+ const menu=$('highlight-menu');menu.querySelector('[data-highlight-action="highlight"]').disabled=!hasSelection;menu.querySelector('[data-highlight-action="clear"]').disabled=!mark;menu.querySelector('[data-highlight-action="clear-all"]').disabled=!root.querySelector('mark.keyword-highlight');
+ menu.hidden=false;const box=menu.getBoundingClientRect();menu.style.left=Math.max(4,Math.min(x,innerWidth-box.width-4))+'px';menu.style.top=Math.max(4,Math.min(y,innerHeight-box.height-4))+'px';
+ return true;
+}
+for(const root of [$('paper'),$('transcript-body')])root.addEventListener('contextmenu',e=>{if(!canHighlight(root))return;if(openHighlightMenu(root,e.clientX,e.clientY,e.target.closest?.('mark.keyword-highlight')))e.preventDefault();});
+$('highlight-menu').addEventListener('click',e=>{const action=e.target.closest('[data-highlight-action]')?.dataset.highlightAction;const context=highlightContext;if(!action||!context||e.target.closest('button').disabled)return;
+ if(action==='highlight'){const selection=getSelection();selection.removeAllRanges();selection.addRange(context.range);captureKeywords(context.root,context.key);}
+ else if(action==='clear')EchoHighlight.remove(context.root,highlights[context.key]||{},context.mark);
+ else {highlights[context.key]={};EchoHighlight.apply(context.root,{});}
+ closeHighlightMenu();});
+document.addEventListener('mousedown',e=>{if(!$('highlight-menu').hidden&&!e.target.closest('#highlight-menu'))closeHighlightMenu();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('highlight-menu').hidden)closeHighlightMenu();});
+for(const pane of [$('paper'),$('transcript-body')])pane.addEventListener('scroll',closeHighlightMenu,{passive:true});
+// Touch screens have no right-click: show the same menu under a finished text selection.
+let touchSelectionTimer;
+if(matchMedia('(pointer: coarse)').matches)document.addEventListener('selectionchange',()=>{clearTimeout(touchSelectionTimer);touchSelectionTimer=setTimeout(()=>{const selection=getSelection();if(!selection.rangeCount||selection.isCollapsed)return;const range=selection.getRangeAt(0);const root=[$('paper'),$('transcript-body')].find(r=>r.contains(range.commonAncestorContainer));if(!root||!canHighlight(root))return;const rect=range.getBoundingClientRect();openHighlightMenu(root,rect.left,rect.bottom+8,null);},450);});
+function renderPartBanner(){
+ const banner=$('part-banner'),show=(attemptStarted||submitted)&&!inLibrary&&!$('paper').hidden;banner.hidden=!show;if(!show)return;
+ const [first,last]=groups()[section-1];banner.innerHTML=`<h2>Part ${section}</h2><p>${activeModule==='reading'?'Read the text below and answer questions':'Listen and answer questions'} <b>${first} – ${last}</b>.</p>`;
+}
+// Letter-only matching (maps, plans, "Which paragraph…") becomes the exam's A–H answer grid;
+// matching with worded options gets drag-and-drop gaps beside the option list. The original select keeps data-q.
+function enhancePaper(){
+ const paper=$('paper'),runs=[];
+ for(const row of paper.querySelectorAll('p.matching-row')){const run=runs.at(-1);if(run&&run.at(-1).nextElementSibling===row)run.push(row);else runs.push([row]);}
+ for(const run of runs){
+  const bank=run[0].previousElementSibling?.classList.contains('bank')?run[0].previousElementSibling:null;
+  const letters=[...run[0].querySelector('select').options].map(o=>o.value).filter(Boolean);
+  const lettersOnly=!!bank&&[...bank.querySelectorAll('[data-token]')].every(t=>t.textContent.replace(/\s+/g,'')===t.dataset.token+t.dataset.token);
+  if(lettersOnly&&letters.length<=12){
+   const table=document.createElement('table');table.className='match-grid';
+   table.innerHTML=`<thead><tr><th scope="col"><span class="sr-only">Câu hỏi</span></th>${letters.map(l=>`<th scope="col">${l}</th>`).join('')}</tr></thead><tbody></tbody>`;
+   for(const row of run){const select=row.querySelector('select'),n=select.dataset.q,label=[...row.childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim();
+    const tr=document.createElement('tr');tr.innerHTML=`<th scope="row" class="grid-label"><span class="qnum">${n}</span>${esc(label)}</th>${letters.map(l=>`<td><input type="radio" name="grid${n}" data-grid="${n}" value="${l}" aria-label="Câu ${n}: ${l}"></td>`).join('')}`;
+    select.classList.add('grid-select');select.tabIndex=-1;select.setAttribute('aria-hidden','true');tr.firstElementChild.append(select);table.tBodies[0].append(tr);}
+   const wrap=document.createElement('div');wrap.className='table-scroll';wrap.append(table);run[0].before(wrap);run.forEach(r=>r.remove());bank.remove();
+  } else if(bank){
+   const layout=document.createElement('div');layout.className='drag-layout';const targets=document.createElement('div');targets.className='drag-targets';
+   run[0].before(layout);targets.append(...run);layout.append(targets,bank);bank.classList.add('drag-options');
+  }
+ }
+ for(const select of paper.querySelectorAll('.inline-match select,.matching-row select')){if(select.options[0]&&!select.options[0].value)select.options[0].textContent=select.dataset.q;}
+}
+function syncGrid(n){document.querySelectorAll(`#paper [data-grid="${n}"]`).forEach(radio=>radio.checked=radio.value===answers[n]);}
 $('begin-attempt').onclick=()=>{if(attemptStarted||submitted||inLibrary)return;timerMode=activeModule==='reading'?$('time-mode').value:'elapsed';attemptStarted=true;started=Date.now();elapsed=0;render();clock();};
 audio.addEventListener('play',()=>{if(activeModule!=='listening'||inLibrary||(!attemptStarted&&!submitted))audio.pause();});
 $('back-library').onclick=()=>requestLeave();$('abort-attempt').onclick=()=>requestLeave();$('abort-continue').onclick=()=>{$('abort-dialog').close();pendingTest=null;};$('abort-confirm').onclick=()=>{const id=pendingTest;$('abort-dialog').close();clearAttempt();pendingTest=null;navigateSelection(id);};
@@ -225,7 +286,7 @@ function renderMenu(){
  const cards=Object.keys(catalog[activeModule][activeVol]).map(id=>`<a class="test-active" href="#" data-module="${activeModule}" data-vol="${activeVol}" data-start-test="${id}"><span>${moduleName()} Test ${id}</span><small class="test-attempt-count">Đã làm 0 lần</small><small class="test-latest-result" hidden></small></a>`).join('');$('test-menu').innerHTML=cards;
  $('library').innerHTML=`<div class="eyebrow">${moduleName().toUpperCase()} · VOL ${activeVol}</div><h1>Chọn bài luyện ${activeModule==='reading'?'đọc':'nghe'}</h1>${vols().length>1?`<div class="library-vols" role="group" aria-label="Chọn Vol">${volButtons}</div>`:''}<div class="library-tests">${cards}</div>`;
  document.querySelector('.test-heading .eyebrow').textContent='IELTS '+moduleName().toUpperCase();
- document.querySelector('.local-label').textContent=activeModule==='reading'?'Kéo chuột chọn từ để bôi vàng trong bài đọc và câu hỏi.':'Audio được phát trực tiếp từ máy của bạn.';
+ document.querySelector('.local-label').textContent=activeModule==='reading'?'Bôi chọn từ, nhấn chuột phải rồi chọn Tô vàng (bài đọc và câu hỏi).':'Audio được phát trực tiếp từ máy của bạn.';
  updateTestCounts();
 }
 function updateTestCounts(){

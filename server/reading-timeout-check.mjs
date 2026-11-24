@@ -6,7 +6,7 @@ export async function checkReadingTimeout({evaluate,call}){
  try{
   // Reach the limit through the actual timer while preserving live inputs and highlights.
   await evaluate("startTest({module:'reading',id:1});$('time-mode').value='timed';$('begin-attempt').click();document.querySelector('[data-choice=\"1\"][value=\"FALSE\"]').click();$('q7').value='water';$('q7').dispatchEvent(new Event('input'));");
-  await evaluate(`(()=>{const paragraph=document.querySelector('#transcript-body p');const range=document.createRange();range.selectNodeContents(paragraph);getSelection().removeAllRanges();getSelection().addRange(range);$('transcript-body').dispatchEvent(new MouseEvent('mouseup'));window.qaInput=$('q7');window.qaAnswers=JSON.stringify(answers);window.qaHighlights=JSON.stringify(highlights);window.qaMarks=document.querySelectorAll('mark.keyword-highlight').length;})()`);
+  await evaluate(`(()=>{const paragraph=document.querySelector('#transcript-body p');const range=document.createRange();range.selectNodeContents(paragraph);getSelection().removeAllRanges();getSelection().addRange(range);$('transcript-body').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:20,clientY:20}));document.querySelector('[data-highlight-action=highlight]').click();window.qaInput=$('q7');window.qaAnswers=JSON.stringify(answers);window.qaHighlights=JSON.stringify(highlights);window.qaMarks=document.querySelectorAll('mark.keyword-highlight').length;})()`);
   assert.ok(await evaluate('qaMarks>0'));
   await evaluate('qaNow=started+3599000;clock()');
   assert.equal(await evaluate("$('timer').textContent"),'00:00:01');

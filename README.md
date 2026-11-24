@@ -28,8 +28,10 @@ Khi chọn từng test, bảng **Lịch sử · Reading/Listening Test N** xuấ
 
 ## Làm bài và chữa bài
 
-- Chọn số câu ở cuối trang để đổi section/passage; đáp án và highlight giữ nguyên khi đổi qua lại.
-- Kéo chuột chọn chữ để bôi vàng. Highlight được lưu cùng lượt đã nộp; lượt mới/làm lại bắt đầu trống.
+- Giao diện làm bài theo kiểu thi IELTS trên máy: thanh trên tối (đồng hồ ở giữa), khung **Part N** với câu “Read the text below / Listen and answer questions …”, ẩn thư viện đề khi đang làm bài. Reading chia hai khung bài đọc/câu hỏi có vạch ngăn.
+- Thanh dưới cùng: **Review** (đánh dấu câu đang làm để xem lại; ô câu được bo tròn), các ô số câu Part 1–4 (đen = chưa làm, trắng gạch chân = đã trả lời, xanh = câu đang làm) và mũi tên ← → sang câu trước/sau, tự đổi Part. Đáp án và highlight giữ nguyên khi đổi qua lại.
+- Ô điền từ/ô chọn hiển thị số câu bên trong như đề thật. Câu ghép chỉ có chữ cái (bản đồ, sơ đồ, “Which paragraph…”) dùng bảng A–H tích chọn; câu ghép có danh sách phương án dùng ô trống + danh sách bên phải để kéo thả (hoặc chọn trong ô).
+- **Tô vàng giống đề thật:** bôi chọn chữ, nhấn **chuột phải → Tô vàng**. Chuột phải lên chữ đã tô để **Xoá tô vàng**, hoặc **Xoá tất cả tô vàng** trong khung đó. Chỉ bôi chọn mà không chọn Tô vàng thì không tô; chuột phải khi chưa chọn chữ vẫn mở menu của trình duyệt. Trên màn hình cảm ứng, menu hiện ngay dưới đoạn vừa chọn. Highlight được lưu cùng lượt đã nộp; lượt mới/làm lại bắt đầu trống.
 - Quay lại / Huỷ bài cần xác nhận trước khi bỏ lượt chưa nộp; huỷ không tạo record và không xoá các lượt đã nộp. Tải lại trang sẽ mất lượt chưa nộp.
 - Reading: bài đọc trái, câu hỏi phải, cuộn riêng. Mặc định đếm xuôi không giới hạn; có tuỳ chọn đếm ngược 60 phút. Hết giờ mở hộp hỏi Nộp bài / Làm tiếp: Nộp bài chấm kết quả và lưu một lượt lịch sử; Làm tiếp chuyển sang đếm xuôi từ 60:00, giữ nguyên đáp án và highlight. Thời gian chờ chọn không tính vào thời lượng làm bài.
 - Listening: chọn audio offline từ máy; không gửi audio lên mạng. Tên `T3-S1.mp3` … `T3-S4.mp3` (Vol 9) tự gán theo section và tương tự các test khác. Vol 8 dùng đúng tên file trong thư mục nguồn: Test 1 `1-International-Student-Travel-Agency.mp3` … `4-Dyscalculia.mp3`, Test 2–7 `2-1.mp3` … `7-4.mp3`, Test 8 `81.mp3` … `84.mp3`; thanh nghe gợi ý tên file của section đang chọn. Nếu tên khác thì chọn section trên thanh nghe trước khi gán từng file. Section câu hỏi và section audio được chọn độc lập: chuyển sang đọc trước câu hỏi section khác vẫn giữ nguyên file, vị trí, tốc độ và trạng thái phát audio. Dùng mục **Nghe → Section 1–4** trên thanh nghe để chủ động đổi audio; khi đổi audio, vị trí từng section được giữ trong phiên. Nộp/huỷ bài hoặc đổi test sẽ dừng audio.
@@ -87,7 +89,7 @@ node server/check.mjs
 node server/browser-check.mjs
 ```
 
-Dùng dữ liệu tạm, không sửa lịch sử thật. Browser check yêu cầu Chrome trên macOS: kiểm tra đủ 29 test (Listening Vol 9, Listening Vol 8, Reading Vol 9) qua điều khiển thực, 40 câu mỗi bài, giữ lựa chọn khi đổi passage/section, tải ảnh, chấm key, chữa bài, lịch sử, highlight và trạng thái chưa chấm của Reading 12.
+Dùng dữ liệu tạm, không sửa lịch sử thật. Browser check yêu cầu Chrome trên macOS: kiểm tra đủ 29 test (Listening Vol 9, Listening Vol 8, Reading Vol 9) qua điều khiển thực, giao diện thi (tô vàng bằng chuột phải, bảng A–H, Review, mũi tên), 40 câu mỗi bài, giữ lựa chọn khi đổi passage/section, tải ảnh, chấm key, chữa bài, lịch sử, highlight và trạng thái chưa chấm của Reading 12.
 
 ## Nhập lại đề nguồn
 

@@ -18,7 +18,7 @@ export async function checkTestHistory({evaluate,call}){
   assert.equal(await visible(),false);
   await evaluate(`answers=Object.fromEntries(Object.entries(TEST.answers).filter(([n])=>groups().some(([a],i)=>+n>=a&&+n<a+${JSON.stringify(counts)}[i])).map(([n,v])=>[n,v[0]]));render();`);
   if(counts[0]===8){
-   await evaluate(`(()=>{const paragraph=document.querySelector('#transcript-body p');const range=document.createRange();range.selectNodeContents(paragraph);getSelection().removeAllRanges();getSelection().addRange(range);$('transcript-body').dispatchEvent(new MouseEvent('mouseup'));})()`);
+   await evaluate(`(()=>{const paragraph=document.querySelector('#transcript-body p');const range=document.createRange();range.selectNodeContents(paragraph);getSelection().removeAllRanges();getSelection().addRange(range);$('transcript-body').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:20,clientY:20}));document.querySelector('[data-highlight-action=highlight]').click();})()`);
    assert.ok(await evaluate("document.querySelector('#transcript-body mark.keyword-highlight')!==null"));
   }
   await evaluate("(async()=>{await $('finish').onclick()})()");
