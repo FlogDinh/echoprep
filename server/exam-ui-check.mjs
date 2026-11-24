@@ -54,6 +54,18 @@ export async function checkExamUI({evaluate}){
  assert.equal(await evaluate('answers[11]'),'C');
  assert.equal(await evaluate("document.querySelector('[data-jump=\"11\"]').classList.contains('filled')"),true);
  await evaluate("change(1);change(2)");assert.equal(await evaluate("$('q11').value"),'C');
+ // Vol 8 audio is on the site: Begin starts Part 1, and each Part's end starts the next one with its questions.
+ assert.match(await evaluate("$('audio').getAttribute('src')"),/Test%201\/audio\/part-1\.mp3$/);
+ assert.equal(await evaluate("$('files').closest('label').hidden&&!$('continuous').closest('label').hidden&&$('continuous').checked"),true);
+ await evaluate("change(1);$('audio').dispatchEvent(new Event('ended'))");
+ assert.equal(await evaluate("[audioSection,section].join()"),'2,2');
+ assert.match(await evaluate("$('audio').getAttribute('src')"),/part-2\.mp3$/);
+ await evaluate("change(1);$('audio').dispatchEvent(new Event('ended'))");
+ assert.equal(await evaluate("[audioSection,section].join()"),'3,1');
+ await evaluate("$('continuous').checked=false;$('audio').dispatchEvent(new Event('ended'));$('continuous').checked=true");
+ assert.equal(await evaluate('audioSection'),3);
+ assert.equal(await evaluate("(async()=>{const r=await fetch($('audio').src);return r.ok&&r.headers.get('content-type')})()"),'audio/mpeg');
+ await evaluate("change(2)");
  // Letter-only matching without a picture ("Which paragraph…") keeps the A–H grid.
  const gridTest=await evaluate("(()=>{for(const [id,t] of Object.entries(catalog.reading[9]))for(let sec=1;sec<=3;sec++){const d=document.createElement('div');d.innerHTML=t.sections[sec-1].html;const bank=[...d.querySelectorAll('.bank')].find(b=>[...b.querySelectorAll('[data-token]')].every(x=>x.textContent.replace(/\\s+/g,'')===x.dataset.token+x.dataset.token)&&!d.querySelector('img.source-image'));if(bank)return [+id,sec]}return null})()");
  if(gridTest){
@@ -73,5 +85,5 @@ export async function checkExamUI({evaluate}){
  assert.match(await evaluate("document.querySelector('#paper .map-row .answer-correction').textContent"),/✓/);
  assert.equal(await evaluate("document.body.classList.contains('exam-mode')"),false);
  assert.equal(await evaluate("document.querySelectorAll('#paper .map-row .explanation-button').length"),5);
- console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, map left/answers right with review marks, A–H grid for Which paragraph, drag-and-drop gaps and numbered answer boxes.');
+ console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, map left/answers right with review marks, Vol 8 hosted audio playing Part 1→4 continuously, A–H grid for Which paragraph, drag-and-drop gaps and numbered answer boxes.');
 }

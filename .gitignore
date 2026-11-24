@@ -11,3 +11,6 @@ document-extracted.txt
 
 # Original practice documents and offline media
 Reference/
+
+# Vol 8 audio is published on the site for continuous Part 1→4 playback (web copies made by import-vol8.py).
+!dist/Listening - Vol 8/*/audio/*.mp3

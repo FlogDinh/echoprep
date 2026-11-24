@@ -5,7 +5,7 @@ single Word paragraphs, choice options have no A/B/C labels, the transcript uses
 "Section n" headings and answer keys for Test 2–8 are screenshots. Those keys are
 transcribed in vol8-answer-keys.json.
 """
-import importlib.util,pathlib,re,json,html
+import importlib.util,pathlib,re,json,html,subprocess
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('vol9',ROOT/'scripts/import-vol9.py');V9=importlib.util.module_from_spec(spec);spec.loader.exec_module(V9)
 NS,W,norm,gap,select,tokens,split_items,parse_bank,strip_labels=V9.NS,V9.W,V9.norm,V9.gap,V9.select,V9.tokens,V9.split_items,V9.parse_bank,V9.strip_labels
@@ -83,8 +83,17 @@ def explanations_test1(doc):
   quotes.setdefault(current,[]).extend(q for q in re.findall(r'“([^”]{12,})”',t))
  return out,quotes
 
+def hosted_audio(folder,out,test):
+ # Web copies for continuous Part 1→4 playback: mono 64 kbps MP3 at <test>/audio/part-N.mp3 (encoded once, kept if present).
+ (out/'audio').mkdir(exist_ok=True);paths={}
+ for sec,name in audio_files(folder).items():
+  dest=out/'audio'/f'part-{sec}.mp3'
+  if not dest.exists():subprocess.run(['ffmpeg','-nostdin','-loglevel','error','-i',str(folder/name),'-map','0:a','-ac','1','-ar','44100','-b:a','64k','-map_metadata','-1',str(dest)],check=True)
+  paths[sec]=f'Listening - Vol 8/Test {test}/audio/part-{sec}.mp3'
+ return paths
+
 def audio_files(folder):
- # Same naming rules as audioFileSection in dist/app.js: 1-Topic.mp3, 7-1.mp3, 81.mp3. Audio itself is never copied.
+ # Same naming rules as audioFileSection in dist/app.js: 1-Topic.mp3, 7-1.mp3, 81.mp3.
  out={}
  for f in sorted(folder.glob('*.mp3')):
   m=re.fullmatch(r'(\d)[-_ ]?([1-4])',f.stem) or re.match(r'()([1-4])[-_ ][A-Za-z]',f.stem)
@@ -194,7 +203,7 @@ def import_test(test):
  data={'id':test,'module':'listening','vol':8,'sections':sections,'passages':[],'singles':singles,'pairs':multi,'answers':answers,'explanations':expl,'transcriptSegments':segments,
   'transcripts':{s:''.join(x['html'] for x in segs) for s,segs in segments.items()},'questionSegments':links,'headingsBySection':{},
   'grading':{'pairs':[q['n'] for q in multi if q['size']==2],'sets':[{'n':q['n'],'size':q['size']} for q in multi]},'groups':[[1,10],[11,20],[21,30],[31,40]],
-  'questionTypes':types,'audioFiles':audio_files(folder),'sourceAnswerKey':original,'sourceNotes':warnings,'hasAnswerKey':True}
+  'questionTypes':types,'audioFiles':audio_files(folder),'audio':hosted_audio(folder,out,test),'sourceAnswerKey':original,'sourceNotes':warnings,'hasAnswerKey':True}
  (out/'test.js').write_text(f'window.VOL8_TESTS[{test}]='+json.dumps(data,ensure_ascii=False)+';\n')
  report={'module':'listening','vol':8,'test':test,'source':source.name,'questions':len(all_controls),'answers':len(answers),'explanations':len(expl),'images':len(list(out.glob('*.png'))),'unlinkedEvidence':unresolved,'warnings':warnings}
  print('listening vol8',test,'OK',len(answers),'keys',len(expl),'explanations; unlinked evidence',unresolved);return report
