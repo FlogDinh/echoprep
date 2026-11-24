@@ -264,6 +264,15 @@ function enhancePaper(){
   const bank=run[0].previousElementSibling?.classList.contains('bank')?run[0].previousElementSibling:null;
   const letters=[...run[0].querySelector('select').options].map(o=>o.value).filter(Boolean);
   const lettersOnly=!!bank&&[...bank.querySelectorAll('[data-token]')].every(t=>t.textContent.replace(/\s+/g,'')===t.dataset.token+t.dataset.token);
+  // Map/plan labelling: the source image on the left, each place with its number and a letter box on the right.
+  const images=[];for(let el=bank?.previousElementSibling;el&&!el.classList.contains('subheading');el=el.previousElementSibling){if(el.matches('img.source-image'))images.unshift(el);else images.unshift(...el.querySelectorAll?.('img.source-image')||[]);}
+  if(lettersOnly&&images.length){
+   const layout=document.createElement('div');layout.className='map-question';const figure=document.createElement('div');figure.className='map-figure';const list=document.createElement('div');list.className='map-answers';
+   bank.before(layout);figure.append(...images);
+   for(const row of run){const select=row.querySelector('select'),n=select.dataset.q,label=[...row.childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim();
+    row.className='matching-row map-row';row.innerHTML=`<span class="map-place">${esc(label)}</span><span class="qnum map-number">${n}</span>`;select.classList.add('map-select');select.setAttribute('aria-label',`Câu ${n}: ${label}`);row.append(select);list.append(row);}
+   layout.append(figure,list);bank.remove();continue;
+  }
   if(lettersOnly&&letters.length<=12){
    const table=document.createElement('table');table.className='match-grid';
    table.innerHTML=`<thead><tr><th scope="col"><span class="sr-only">Câu hỏi</span></th>${letters.map(l=>`<th scope="col">${l}</th>`).join('')}</tr></thead><tbody></tbody>`;
@@ -276,7 +285,7 @@ function enhancePaper(){
    run[0].before(layout);targets.append(...run);layout.append(targets,bank);bank.classList.add('drag-options');
   }
  }
- for(const select of paper.querySelectorAll('.inline-match select,.matching-row select')){if(select.options[0]&&!select.options[0].value)select.options[0].textContent=select.dataset.q;}
+ for(const select of paper.querySelectorAll('.inline-match select,.matching-row select')){if(select.options[0]&&!select.options[0].value)select.options[0].textContent=select.classList.contains('map-select')?'':select.dataset.q;}
 }
 function syncGrid(n){document.querySelectorAll(`#paper [data-grid="${n}"]`).forEach(radio=>radio.checked=radio.value===answers[n]);}
 $('begin-attempt').onclick=()=>{if(attemptStarted||submitted||inLibrary)return;timerMode=activeModule==='reading'?$('time-mode').value:'elapsed';attemptStarted=true;started=Date.now();elapsed=0;render();clock();};

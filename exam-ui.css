@@ -139,3 +139,16 @@ footer{background:#fff;border-top:1px solid #9a9a9a;box-shadow:none;padding:6px 
 }
 .passage-heading{background:#fff!important;border:1px dashed #7a7a7a;border-radius:0!important;font-weight:700}
 .passage-heading select{border:1px solid #3a3a3a!important;border-radius:2px!important}
+/* Listening map/plan labelling: map on the left, places with numbered letter boxes on the right */
+.map-question{display:grid;gap:18px 30px;margin:12px 0 20px}
+@container (min-width:640px){.map-question{grid-template-columns:minmax(0,1.45fr) minmax(230px,1fr);align-items:start}}
+.map-figure .source-image{margin:0;width:100%;height:auto}
+.map-answers{display:flex;flex-direction:column;gap:6px}
+#paper .map-row{display:flex;align-items:center;gap:12px;margin:0;padding:8px 6px;border:0;background:none}
+.map-place{flex:0 1 auto;font-size:15px;line-height:1.35}
+#paper .map-row>.map-number{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;margin:0;border-radius:50%;background:#2b3443;color:#fff;font-size:13px;font-weight:700}
+#paper .map-row select.map-select{display:inline-block;width:100px;min-width:0;margin:0;padding:3px 4px;border:0;border-bottom:1.5px solid #8a94a6;border-radius:0;background:transparent;font-size:15px;font-weight:700;text-align:center}
+#paper .map-row select.map-select:focus{outline:0;border-bottom-color:var(--cd-blue);background:#f3f8fd}
+.map-row .answer-correction{font-size:13px}
+.map-row .explanation-button{font-size:12px;padding:2px 6px}
+@container (min-width:640px){.map-answers{position:sticky;top:56px}}
