@@ -220,9 +220,19 @@ let highlightContext=null;
 const highlightKey=root=>root===$('paper')?section:'passage:'+section;
 const canHighlight=root=>attemptStarted&&!submitted&&!inLibrary&&(root===$('paper')||activeModule==='reading');
 function closeHighlightMenu(){$('highlight-menu').hidden=true;highlightContext=null;}
+// Some browsers (Safari, Firefox on some systems) drop the selection when the right button is pressed:
+// keep the last text selected in a pane and reuse it when the right-click lands on that text.
+let lastSelection=null;
+document.addEventListener('selectionchange',()=>{const selection=getSelection();if(!selection.rangeCount||selection.isCollapsed||!selection.toString().trim())return;const range=selection.getRangeAt(0),root=[$('paper'),$('transcript-body')].find(r=>r.contains(range.commonAncestorContainer));if(root)lastSelection={root,range:range.cloneRange()};});
+function rememberedSelection(root,x,y){
+ if(lastSelection?.root!==root||!root.contains(lastSelection.range.commonAncestorContainer))return null;
+ const inside=[...lastSelection.range.getClientRects()].some(r=>x>=r.left-6&&x<=r.right+6&&y>=r.top-6&&y<=r.bottom+6);
+ return inside&&lastSelection.range.toString().trim()?lastSelection.range:null;
+}
 function openHighlightMenu(root,x,y,mark){
- const selection=getSelection(),range=selection.rangeCount&&!selection.isCollapsed?selection.getRangeAt(0):null;
- const hasSelection=!!range&&root.contains(range.commonAncestorContainer)&&!!selection.toString().trim();
+ const selection=getSelection();let range=selection.rangeCount&&!selection.isCollapsed?selection.getRangeAt(0):null;
+ if(!(range&&root.contains(range.commonAncestorContainer)&&selection.toString().trim())){range=rememberedSelection(root,x,y);if(range){selection.removeAllRanges();selection.addRange(range.cloneRange());}}
+ const hasSelection=!!range&&root.contains(range.commonAncestorContainer)&&!!range.toString().trim();
  if(!hasSelection&&!mark)return false;
  const key=highlightKey(root);highlightContext={root,key,range:hasSelection?range.cloneRange():null,mark};
  const menu=$('highlight-menu');menu.querySelector('[data-highlight-action="highlight"]').disabled=!hasSelection;menu.querySelector('[data-highlight-action="clear"]').disabled=!mark;menu.querySelector('[data-highlight-action="clear-all"]').disabled=!root.querySelector('mark.keyword-highlight');
@@ -231,7 +241,7 @@ function openHighlightMenu(root,x,y,mark){
 }
 for(const root of [$('paper'),$('transcript-body')])root.addEventListener('contextmenu',e=>{if(!canHighlight(root))return;if(openHighlightMenu(root,e.clientX,e.clientY,e.target.closest?.('mark.keyword-highlight')))e.preventDefault();});
 $('highlight-menu').addEventListener('click',e=>{const action=e.target.closest('[data-highlight-action]')?.dataset.highlightAction;const context=highlightContext;if(!action||!context||e.target.closest('button').disabled)return;
- if(action==='highlight'){const selection=getSelection();selection.removeAllRanges();selection.addRange(context.range);captureKeywords(context.root,context.key);}
+ if(action==='highlight'){const selection=getSelection();selection.removeAllRanges();selection.addRange(context.range);captureKeywords(context.root,context.key);lastSelection=null;}
  else if(action==='clear')EchoHighlight.remove(context.root,highlights[context.key]||{},context.mark);
  else {highlights[context.key]={};EchoHighlight.apply(context.root,{});}
  closeHighlightMenu();});

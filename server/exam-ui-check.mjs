@@ -28,6 +28,13 @@ export async function checkExamUI({evaluate}){
  assert.equal(await evaluate("document.querySelectorAll('#paper mark.keyword-highlight').length>0"),true);
  await evaluate(`getSelection().removeAllRanges();${rightClick("document.querySelector('#paper mark.keyword-highlight')")};document.querySelector('[data-highlight-action=clear-all]').click()`);
  assert.equal(await evaluate("document.querySelectorAll('#paper mark.keyword-highlight').length+Object.keys(highlights[1]||{}).length"),0);
+ // Browsers that drop the selection on right-click (Safari/Firefox) still get Tô vàng for the text just selected.
+ await evaluate(`(()=>{const el=${select("$('transcript-body')")};const box=getSelection().getRangeAt(0).getClientRects()[0];window.qaPoint={x:box.left+box.width/2,y:box.top+box.height/2};})()`);
+ await new Promise(r=>setTimeout(r,50));
+ assert.equal(await evaluate("getSelection().removeAllRanges();(()=>{const event=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:qaPoint.x,clientY:qaPoint.y});document.elementFromPoint(qaPoint.x,qaPoint.y).dispatchEvent(event);return event.defaultPrevented})()"),true);
+ assert.equal(await evaluate("document.querySelector('[data-highlight-action=highlight]').disabled"),false);
+ await evaluate("document.querySelector('[data-highlight-action=highlight]').click()");
+ assert.equal(await evaluate("document.querySelectorAll('#transcript-body mark.keyword-highlight').length>0"),true);
  // Review flag, current question and arrows in the bottom bar.
  await evaluate("document.querySelector('[data-jump=\"5\"]').click();$('review-flag').click()");
  assert.equal(await evaluate("document.querySelector('[data-jump=\"5\"]').className.includes('flagged')"),true);
