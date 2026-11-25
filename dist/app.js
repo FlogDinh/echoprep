@@ -154,21 +154,32 @@ function renderReview(){
  });
  document.querySelectorAll('#paper .choice-block').forEach(el=>{const n=+el.id.slice(1);el.dataset.reviewQuestion=n;el.classList.add('review-question');const rows=result.rows.slice(n-1,TEST.pairs.some(p=>p.n===n)?n-1+choiceSize(TEST.pairs.find(p=>p.n===n)):n);el.insertAdjacentHTML('beforeend',`<div class="choice-feedback">${rows.map(r=>`<span class="answer-correction ${r.status}">Câu ${r.n}: ${esc(r.value)||'—'} → <strong>${esc(r.expected)}</strong> ${r.status==='correct'?'✓':r.status==='unchecked'?'?':'✕'}</span>`).join('')}</div>`);const correct=(TEST.answers[n]||[]).flatMap(v=>v.split('/'));el.querySelectorAll('.choice').forEach(label=>{const input=label.querySelector('input');if(correct.includes(input.value))label.classList.add('correct-option');else if(input.checked&&TEST.hasAnswerKey!==false)label.classList.add('wrong-option')})});
 }
-function showExplanation(n){
+function showExplanation(n,opts={}){
  if(!submitted)return;
  const targetSection=questionSection(n);if(section!==targetSection)change(targetSection);
  $('results').hidden=true;$('review-shell').hidden=false;$('results-toggle').textContent='Bảng kết quả';
  selectedQuestion=n;$('explanation-title').textContent=`Câu ${n} · Giải thích đáp án`;
  const row=result.rows[n-1];const ids=TEST.questionSegments[n]||[];
  $('explanation-content').innerHTML=`<div class="explanation-answer"><p>Bạn trả lời: <strong>${esc(row.value)||'—'}</strong></p><p>Đáp án: <strong>${esc(row.expected)}</strong></p></div>`+(TEST.explanations[n]||`<p class="source-note">${activeModule==='reading'?'File gốc chưa có lời giải riêng cho câu này.':'File gốc chưa có lời giải riêng cho câu này.'} ${ids.length?'Đoạn liên quan đã được đánh dấu bên trái.':'Bạn có thể đối chiếu toàn bộ nội dung bên trái; chưa có vị trí bằng chứng được xác nhận cho câu này.'}</p>${TEST.transcriptSegments[section].filter(segment=>ids.includes(segment.id)).map(segment=>segment.html).join('')}`);
+ if(questionAudioTime(n))$('explanation-content').insertAdjacentHTML('afterbegin',`<button type="button" class="replay-question" data-replay="${n}">▶ Nghe lại đoạn câu ${n}</button>`);
  $('explanation-sheet').hidden=false;$('explanation-content').scrollTop=0;
  document.querySelectorAll('.transcript-segment').forEach(el=>el.classList.toggle('evidence-active',ids.includes(el.id)));
  document.querySelectorAll('[data-review-question]').forEach(el=>el.classList.toggle('question-active',+el.dataset.reviewQuestion===(questionBase(n))));
  const evidence=$(ids[0]);if(evidence){const pane=$('transcript-body');pane.scrollTo({top:Math.max(0,evidence.getBoundingClientRect().top-pane.getBoundingClientRect().top+pane.scrollTop-20),behavior:'auto'})}
+ if(opts.play!==false)playQuestionAudio(n);
  const question=$('q'+(questionBase(n)));if(question){const card=question.closest('[data-review-question]')||question,paper=$('paper');paper.scrollTo({top:Math.max(0,paper.scrollTop+card.getBoundingClientRect().top-paper.getBoundingClientRect().top-Math.max(18,(paper.clientHeight-card.offsetHeight)/2)),behavior:'auto'})}
 }
+// Review: play the recording from where question n is answered (times from scripts/align-audio-times.py).
+function questionAudioTime(n){return activeModule==='listening'?(window.AUDIO_TIMES||{})[audioKey()]?.[n]||null:null}
+function playQuestionAudio(n){
+ const at=questionAudioTime(n);if(!at)return false;const [sec,t]=at;
+ if(!sources[sec]){$('audio-status').textContent=`Chọn file nghe Section ${sec} (${audioFileHint(sec)}) để nghe lại đoạn của câu ${n}.`;return false}
+ rememberAudioPosition();if(audioSection!==sec){audio.pause();audioSection=sec}
+ positions[sec]=t;loadAudio();if(audio.getAttribute('src')===sources[sec]&&audio.readyState>=1)audio.currentTime=t;
+ audio.play().catch(()=>{});$('audio-status').textContent=`Đang phát đoạn của câu ${n} (Section ${sec}, từ ${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}).`;return true;
+}
 $('explanation-close').onclick=()=>{$('explanation-sheet').hidden=true;selectedQuestion=null;};
-document.addEventListener('click',e=>{const b=e.target.closest('[data-explain]');if(b&&submitted){showExplanation(+b.dataset.explain);return}const q=e.target.closest('[data-review-question]');if(q&&submitted)showExplanation(+q.dataset.reviewQuestion)});
+document.addEventListener('click',e=>{const r=e.target.closest('[data-replay]');if(r){playQuestionAudio(+r.dataset.replay);return}const b=e.target.closest('[data-explain]');if(b&&submitted){showExplanation(+b.dataset.explain);return}const q=e.target.closest('[data-review-question]');if(q&&submitted)showExplanation(+q.dataset.reviewQuestion)});
 function showExam(){inLibrary=false;$('library').hidden=true;$('submit').hidden=false;$('abort-attempt').hidden=submitted; $('history').hidden=true;$('review-shell').hidden=false;$('paper').hidden=false;document.querySelector('.test-heading').hidden=false;document.querySelector('footer').hidden=false;$('results').hidden=!result;render();clock();loadAudio();if(result)renderResults();}
 function renderResults(){
  $('results').hidden=true;$('results').innerHTML=`<div class="result-heading"><div><div class="eyebrow">${reviewingId?'XEM LẠI LƯỢT ĐÃ LÀM':'KẾT QUẢ LÀM BÀI'}</div><h2>${TEST.hasAnswerKey===false?'Đã nộp bài':result.correct+'<span> / 40 câu đúng</span>'}</h2></div><p>Thời gian: ${esc(duration(elapsed))}</p></div><div class="stats"><div><strong>${TEST.hasAnswerKey===false?'—':result.correct}</strong>Đúng</div><div><strong>${TEST.hasAnswerKey===false?'—':result.wrong}</strong>Sai</div><div><strong>${result.blank}</strong>Bỏ qua</div></div>${storageNotice?`<p class="storage-notice" role="status">${esc(storageNotice)}</p>`:''}<div class="actions"><button id="review">Xem lại câu hỏi</button><button id="restart">Làm lại</button><button id="results-history">Lịch sử làm bài</button>${reviewBackup?'<button id="return-current">Trở về lượt hiện tại</button>':''}</div><div class="table-scroll"><table><thead><tr><th>Câu</th><th>Bạn trả lời</th><th>Đáp án</th><th>Kết quả</th><th>Chữa bài</th></tr></thead><tbody>${result.rows.map(r=>`<tr class="${r.status}"><td>${r.n}</td><td>${esc(r.value)||'—'}</td><td>${esc(r.expected)}</td><td>${r.status==='correct'?'Đúng':r.status==='wrong'?'Sai':r.status==='unchecked'?'Chưa chấm':'Bỏ qua'}</td><td>${explanationButton(r.n)}</td></tr>`).join('')}</tbody></table></div>`;

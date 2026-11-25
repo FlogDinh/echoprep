@@ -1,0 +1,85 @@
+listening:8:1 s1: 99% transcript words matched
+listening:8:1 s2: 95% transcript words matched
+listening:8:1 s3: 97% transcript words matched
+listening:8:1 s4: 96% transcript words matched
+listening:8:1: 40 questions timed (label 40, cue 0, answer 0, paragraph 0)
+listening:8:2 s1: 92% transcript words matched
+listening:8:2 s2: 95% transcript words matched
+listening:8:2 s3: 99% transcript words matched
+listening:8:2 s4: 99% transcript words matched
+listening:8:2: 40 questions timed (label 0, cue 22, answer 18, paragraph 0)
+listening:8:3 s1: 97% transcript words matched
+listening:8:3 s2: 98% transcript words matched
+listening:8:3 s3: 98% transcript words matched
+listening:8:3 s4: 94% transcript words matched
+listening:8:3: 40 questions timed (label 0, cue 18, answer 22, paragraph 0)
+listening:8:4 s1: 98% transcript words matched
+listening:8:4 s2: 94% transcript words matched
+listening:8:4 s3: 97% transcript words matched
+listening:8:4 s4: 97% transcript words matched
+listening:8:4: 40 questions timed (label 0, cue 21, answer 19, paragraph 0)
+listening:8:5 s1: 98% transcript words matched
+listening:8:5 s2: 94% transcript words matched
+listening:8:5 s3: 97% transcript words matched
+listening:8:5 s4: 96% transcript words matched
+listening:8:5: 40 questions timed (label 0, cue 19, answer 21, paragraph 0)
+listening:8:6 s1: 97% transcript words matched
+listening:8:6 s2: 94% transcript words matched
+listening:8:6 s3: 95% transcript words matched
+listening:8:6 s4: 94% transcript words matched
+listening:8:6: 40 questions timed (label 0, cue 21, answer 19, paragraph 0)
+listening:8:7 s1: 97% transcript words matched
+listening:8:7 s2: 96% transcript words matched
+listening:8:7 s3: 97% transcript words matched
+listening:8:7 s4: 98% transcript words matched
+listening:8:7: 40 questions timed (label 0, cue 19, answer 21, paragraph 0)
+listening:8:8 s1: 98% transcript words matched
+listening:8:8 s2: 94% transcript words matched
+listening:8:8 s3: 99% transcript words matched
+listening:8:8 s4: 97% transcript words matched
+listening:8:8: 40 questions timed (label 0, cue 18, answer 21, paragraph 1)
+listening:9:1 s1: 89% transcript words matched
+listening:9:1 s2: 92% transcript words matched
+listening:9:1 s3: 91% transcript words matched
+listening:9:1 s4: 94% transcript words matched
+listening:9:1: 40 questions timed (label 0, cue 0, answer 27, paragraph 13)
+listening:9:2 s1: 90% transcript words matched
+listening:9:2 s2: 94% transcript words matched
+listening:9:2 s3: 88% transcript words matched
+listening:9:2 s4: 96% transcript words matched
+listening:9:2: 40 questions timed (label 0, cue 0, answer 20, paragraph 20)
+listening:9:3 s1: 83% transcript words matched
+listening:9:3 s2: 90% transcript words matched
+listening:9:3 s3: 89% transcript words matched
+listening:9:3 s4: 93% transcript words matched
+listening:9:3: 40 questions timed (label 0, cue 23, answer 17, paragraph 0)
+listening:9:4 s1: 89% transcript words matched
+listening:9:4 s2: 92% transcript words matched
+listening:9:4 s3: 95% transcript words matched
+listening:9:4 s4: 94% transcript words matched
+listening:9:4: 40 questions timed (label 0, cue 22, answer 18, paragraph 0)
+listening:9:5 s1: 90% transcript words matched
+listening:9:5 s2: 91% transcript words matched
+listening:9:5 s3: 93% transcript words matched
+listening:9:5 s4: 95% transcript words matched
+listening:9:5: 40 questions timed (label 0, cue 23, answer 17, paragraph 0)
+listening:9:6 s1: 90% transcript words matched
+listening:9:6 s2: 96% transcript words matched
+listening:9:6 s3: 93% transcript words matched
+listening:9:6 s4: 93% transcript words matched
+listening:9:6: 40 questions timed (label 0, cue 22, answer 18, paragraph 0)
+listening:9:7 s1: 94% transcript words matched
+listening:9:7 s2: 96% transcript words matched
+listening:9:7 s3: 92% transcript words matched
+listening:9:7 s4: 92% transcript words matched
+listening:9:7: 40 questions timed (label 0, cue 23, answer 17, paragraph 0)
+listening:9:8 s1: 88% transcript words matched
+listening:9:8 s2: 94% transcript words matched
+listening:9:8 s3: 94% transcript words matched
+listening:9:8 s4: 94% transcript words matched
+listening:9:8: 40 questions timed (label 0, cue 24, answer 16, paragraph 0)
+listening:9:9 s1: 95% transcript words matched
+listening:9:9 s2: 89% transcript words matched
+listening:9:9 s3: 95% transcript words matched
+listening:9:9 s4: 94% transcript words matched
+listening:9:9: 40 questions timed (label 0, cue 19, answer 21, paragraph 0)

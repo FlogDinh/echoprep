@@ -85,5 +85,12 @@ export async function checkExamUI({evaluate}){
  assert.match(await evaluate("document.querySelector('#paper .map-row .answer-correction').textContent"),/✓/);
  assert.equal(await evaluate("document.body.classList.contains('exam-mode')"),false);
  assert.equal(await evaluate("document.querySelectorAll('#paper .map-row .explanation-button').length"),5);
- console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, map left/answers right with review marks, Vol 8 hosted audio playing Part 1→4 continuously, A–H grid for Which paragraph, drag-and-drop gaps and numbered answer boxes.');
+ // Review: opening a question's explanation plays the recording from where it is answered and shows its transcript paragraph.
+ await evaluate("change(1);document.querySelector('#paper [data-explain=\"14\"],#paper [data-review-question=\"14\"]')?.click()||showExplanation(14)");
+ assert.equal(await evaluate("[audioSection,section,positions[2]===AUDIO_TIMES['listening:8:1'][14][1]].join()"),'2,2,true');
+ assert.match(await evaluate("$('audio').getAttribute('src')"),/part-2\.mp3$/);
+ assert.equal(await evaluate("document.querySelector('.transcript-segment.evidence-active')?.textContent.includes('café bar')||document.querySelector('.transcript-segment.evidence-active')?.textContent.includes('cafe bar')"),true);
+ assert.equal(await evaluate("!!document.querySelector('#explanation-content [data-replay=\"14\"]')"),true);
+ await evaluate("showExplanation(33)");assert.equal(await evaluate("[audioSection,positions[4]===AUDIO_TIMES['listening:8:1'][33][1]].join()"),'4,true');
+ console.log('PASS EXAM UI: right-click highlight/clear/clear all (no highlight on plain selection), native menu without selection, Part banner, Review flags, arrows across Parts, map left/answers right with review marks, Vol 8 hosted audio playing Part 1→4 continuously, review explanations playing the answer part of the recording, A–H grid for Which paragraph, drag-and-drop gaps and numbered answer boxes.');
 }

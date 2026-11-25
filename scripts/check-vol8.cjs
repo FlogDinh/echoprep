@@ -17,9 +17,10 @@ for(const [id,t] of Object.entries(tests)){
  for(const [sec,segs] of Object.entries(t.transcriptSegments)){assert.ok(segs.map(s=>s.text).join(' ').length>1500,`Test ${id} transcript ${sec}`)}
  for(let n=1;n<=40;n++)for(const link of t.questionSegments[n]||[])assert.ok(t.transcriptSegments[Math.ceil(n/10)].some(s=>s.id===link),`Test ${id} evidence ${n}`);
  const images=[...t.sections.map(s=>s.html).join('').matchAll(/src="([^"]+)"/g)];for(const image of images)assert.ok(fs.existsSync('dist/'+decodeURIComponent(image[1])),image[1]);
+ for(let n=1;n<=40;n++)assert.ok((t.questionSegments[n]||[]).length,`Test ${id} Q${n} has a transcript paragraph`);
  // Hosted audio for continuous Part 1→4 playback.
  assert.deepEqual(Object.keys(t.audio),['1','2','3','4']);for(const [sec,src] of Object.entries(t.audio)){assert.equal(src,`Listening - Vol 8/Test ${id}/audio/part-${sec}.mp3`);assert.ok(fs.statSync('dist/'+src).size>500000,src)}
- console.log(`PASS Listening Vol 8 Test ${id}: 40 controls, 40 source answers, ${images.length} source images, ${Object.keys(t.explanations).length} explanations, 4 hosted audio parts`);
+ console.log(`PASS Listening Vol 8 Test ${id}: 40 controls, 40 source answers, ${images.length} source images, ${Object.keys(t.explanations).length} explanations, 4 hosted audio parts, 40 evidence paragraphs`);
 }
 assert.equal(tests[1].explanations[25].includes('too irregular'),true);
 assert.match(tests[8].sourceNotes.join(' '),/Câu 22/);

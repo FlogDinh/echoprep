@@ -79,11 +79,15 @@ export async function checkAudioNavigation({call,wait}){
  assert.equal(await evaluate('audio.paused'),true);
  assert.equal(await evaluate('getHistory().length'),base+1);
  assert.equal(await evaluate('audioSection'),2);
- await evaluate('audio.play();window.qaReviewTime=audio.currentTime;showExplanation(31)');
+ // Browsing explanations without asking to play keeps the recording running; opening one normally jumps to its answer.
+ await evaluate('audio.play();window.qaReviewTime=audio.currentTime;showExplanation(31,{play:false})');
  assert.equal(await evaluate('section'),4);
  assert.equal(await evaluate('audioSection'),2);
  assert.equal(await evaluate('audio.paused'),false);
  await wait('audio.currentTime>qaReviewTime+0.2');
+ await evaluate('showExplanation(31)');
+ assert.equal(await evaluate("[audioSection,positions[4]===AUDIO_TIMES['listening:9:3'][31][1]].join()"),'4,true');
+ await evaluate("audioSection=2;$('audio-section').value='2';loadAudio();audio.play();showExplanation(31,{play:false})");
  if(process.env.ECHOPREP_SCREENSHOT){
   await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await writeFile('/tmp/echoprep-independent-audio.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));

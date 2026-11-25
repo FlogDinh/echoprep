@@ -189,24 +189,30 @@ def import_test(test):
   assert sum(len(x['text']) for x in segments[str(sec)])>1500,(test,sec,'short transcript')
  expl,quotes=explanations_test1(doc) if test==1 else ({},{})
  # Evidence: exact quote from the source explanation, else a gap answer found in exactly one paragraph.
- links={};unresolved=[]
+ links={};unresolved=[];cues={}
  for n in range(1,41):
   segs=segments[str((n-1)//10+1)];found=[]
-  for q in quotes.get(str(n),[]):
+  # Test 1's transcript carries Qn labels at each answer; other tests use hand-checked quotes (vol8-evidence-cues.json).
+  marked=[x['id'] for x in segs if re.search(rf'\bQ{n}\b',x['text'])]
+  if marked:found=marked[:1];cues[str(n)]=f'Q{n}'
+  for q in ([] if found else quotes.get(str(n),[])+([CUES[str(test)][str(n)]] if str(n) in CUES.get(str(test),{}) else [])):
    qn=norm(q);hits=[x['id'] for x in segs if len(qn)>12 and qn in norm(x['text'])]
-   if hits:found=hits[:1];break
+   if hits:found=hits[:1];cues[str(n)]=q;break
+   assert str(n) not in CUES.get(str(test),{}) or q!=CUES[str(test)][str(n)],(test,n,'cue not in transcript',q)
   if not found and types[str(n)]=='gap':
    hits=[x['id'] for x in segs if any(len(norm(v))>=3 and re.search(r'(?<!\w)'+re.escape(v)+r'(?!\w)',x['text'],re.I) for v in answers[str(n)])]
    if len(hits)==1:found=hits
   links[str(n)]=found
   if not found:unresolved.append(n)
  data={'id':test,'module':'listening','vol':8,'sections':sections,'passages':[],'singles':singles,'pairs':multi,'answers':answers,'explanations':expl,'transcriptSegments':segments,
-  'transcripts':{s:''.join(x['html'] for x in segs) for s,segs in segments.items()},'questionSegments':links,'headingsBySection':{},
+  'transcripts':{s:''.join(x['html'] for x in segs) for s,segs in segments.items()},'questionSegments':links,'evidenceCues':cues,'headingsBySection':{},
   'grading':{'pairs':[q['n'] for q in multi if q['size']==2],'sets':[{'n':q['n'],'size':q['size']} for q in multi]},'groups':[[1,10],[11,20],[21,30],[31,40]],
   'questionTypes':types,'audioFiles':audio_files(folder),'audio':hosted_audio(folder,out,test),'sourceAnswerKey':original,'sourceNotes':warnings,'hasAnswerKey':True}
  (out/'test.js').write_text(f'window.VOL8_TESTS[{test}]='+json.dumps(data,ensure_ascii=False)+';\n')
  report={'module':'listening','vol':8,'test':test,'source':source.name,'questions':len(all_controls),'answers':len(answers),'explanations':len(expl),'images':len(list(out.glob('*.png'))),'unlinkedEvidence':unresolved,'warnings':warnings}
  print('listening vol8',test,'OK',len(answers),'keys',len(expl),'explanations; unlinked evidence',unresolved);return report
+
+CUES=json.loads((ROOT/'scripts/vol8-evidence-cues.json').read_text())
 
 if __name__=='__main__':
  report=[import_test(n) for n in range(1,9)]
