@@ -152,3 +152,7 @@ footer{background:#fff;border-top:1px solid #9a9a9a;box-shadow:none;padding:6px 
 .map-row .answer-correction{font-size:13px}
 .map-row .explanation-button{font-size:12px;padding:2px 6px}
 @container (min-width:640px){.map-answers{position:sticky;top:56px}}
+
+/* Review: replay the part of the recording where this question is answered. */
+.replay-question{display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 14px;border:1px solid #1d4ed8;border-radius:999px;background:#eff4ff;color:#1d4ed8;font:inherit;font-weight:600;cursor:pointer}
+.replay-question:hover{background:#1d4ed8;color:#fff}
