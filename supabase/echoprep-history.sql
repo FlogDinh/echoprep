@@ -59,6 +59,8 @@ language sql stable security definer set search_path = public as $$
   select public.echoprep_role(p_key);
 $$;
 
+-- Needed when the project does not grant API access automatically; gives no access to the tables.
+grant usage on schema public to anon, authenticated;
 revoke execute on function public.echoprep_role(text) from public, anon, authenticated;
 revoke execute on function public.echoprep_save(text, jsonb), public.echoprep_list(text), public.echoprep_whoami(text) from public;
 grant execute on function public.echoprep_save(text, jsonb), public.echoprep_list(text), public.echoprep_whoami(text) to anon, authenticated;
