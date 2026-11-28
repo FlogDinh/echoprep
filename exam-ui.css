@@ -156,3 +156,8 @@ footer{background:#fff;border-top:1px solid #9a9a9a;box-shadow:none;padding:6px 
 /* Review: replay the part of the recording where this question is answered. */
 .replay-question{display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 14px;border:1px solid #1d4ed8;border-radius:999px;background:#eff4ff;color:#1d4ed8;font:inherit;font-weight:600;cursor:pointer}
 .replay-question:hover{background:#1d4ed8;color:#fff}
+
+/* Online history: sync status for the student, read-only view for the teacher. */
+.cloud-status{margin:-4px 0 14px;padding:8px 12px;border-radius:8px;background:#ecfdf3;color:#166534;font-size:14px}
+.cloud-status.cloud-error{background:#fff7ed;color:#9a3412}
+.teacher-mode [data-history-retry],.teacher-mode #history-back{display:none}

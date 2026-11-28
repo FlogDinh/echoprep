@@ -21,7 +21,34 @@ let reviewingId=null, reviewBackup=null, storageNotice='';
 let pendingSave=null;
 const HISTORY_KEY=EchoHistory.keys.LEGACY;
 let browserStorage;try{browserStorage=localStorage}catch{}
-const historyStore=EchoHistory.create({storage:browserStorage,localAPI:window.ECHO_LOCAL_HISTORY===true,onChange:updateHistoryStatus});
+// Online history on Supabase (cloud-config.js). Open the site once with #connect=<student key> to save attempts
+// online from this browser; #teacher=<teacher key> opens a read-only view of every attempt for the teacher.
+const CLOUD_KEY='echoprep:cloud-key:v1',cloudHash=new URLSearchParams(location.hash.slice(1));
+const teacherKey=cloudHash.get('teacher')||'',connectKey=cloudHash.get('connect')||'';
+let studentKey='';try{studentKey=connectKey||browserStorage?.getItem(CLOUD_KEY)||''}catch{}
+if(connectKey){try{browserStorage?.setItem(CLOUD_KEY,connectKey)}catch{}history.replaceState(null,'',location.pathname+location.search)}
+const teacherMode=!!teacherKey;let cloudNotice='';
+function cloudRPC(fn,body){const c=window.ECHO_CLOUD||{};return fetch(`${c.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`,{method:'POST',credentials:'omit',headers:{apikey:c.anonKey,Authorization:`Bearer ${c.anonKey}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)}).then(async r=>{if(!r.ok)throw Error(`cloud_${r.status}`);const t=await r.text();return t?JSON.parse(t):null})}
+function cloudRemote(){
+ const c=window.ECHO_CLOUD||{},key=teacherKey||studentKey;if(!c.url||!c.anonKey||!key)return null;
+ return {name:'lịch sử online',list:()=>cloudRPC('echoprep_list',{p_key:key}),save:teacherMode?null:record=>cloudRPC('echoprep_save',{p_key:key,p_record:record})};
+}
+const memoryStorage=(()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k)}})();
+const historyStore=EchoHistory.create({storage:teacherMode?memoryStorage:browserStorage,localAPI:window.ECHO_LOCAL_HISTORY===true,remote:cloudRemote(),onChange:updateHistoryStatus});
+// A new link is checked once: a wrong or replaced key is forgotten instead of failing every save.
+async function checkCloudKey(){
+ const key=teacherKey||connectKey;if(!key||!cloudRemote())return;
+ try{const role=await cloudRPC('echoprep_whoami',{p_key:key});
+  if(role!==(teacherMode?'teacher':'student')){cloudNotice='Link lịch sử online không còn hiệu lực. Hãy xin link mới.';if(!teacherMode){try{browserStorage?.removeItem(CLOUD_KEY)}catch{}}}
+  else if(!teacherMode)cloudNotice='Đã bật lịch sử online cho trình duyệt này. Các lượt đã làm đang được gửi lên.';
+ }catch{cloudNotice='Chưa kiểm tra được link lịch sử online (mất mạng?).'}
+}
+function cloudStatusText(){
+ const st=historyStore.status();if(cloudNotice&&!st.synced)return cloudNotice;
+ if(teacherMode)return st.syncError?'Chưa tải được lịch sử online. Kiểm tra mạng rồi bấm Làm mới.':st.synced?'Chế độ giáo viên · chỉ xem. Bấm vào một lượt để xem bài chữa chi tiết.':'Đang tải lịch sử của học viên…';
+ if(!st.remote)return '';
+ return st.syncError?'Lịch sử online: chưa kết nối được, các lượt mới vẫn lưu trong trình duyệt và sẽ tự gửi lại.':st.pending?`Lịch sử online: còn ${st.pending} lượt chưa gửi được.`:'Lịch sử online: đã bật · cô giáo xem được các lượt đã nộp.';
+}
 function getHistory(){return historyStore.list()}
 function updateHistoryStatus(){updateTestCounts();renderTestHistory();if(!$('history').hidden)renderHistory();}
 async function refreshHistory(){await historyStore.sync();updateHistoryStatus();}
@@ -216,7 +243,7 @@ function renderTestHistory(){
 }
 
 function renderHistory(){
- const records=getHistory().filter(r=>(r.module||'listening')===activeModule&&+(r.vol||9)===activeVol).slice().reverse();$('history').innerHTML=`<div class="history-heading"><div><div class="eyebrow">${moduleName().toUpperCase()} · VOL ${activeVol}</div><h1>Lịch sử làm bài</h1></div><button id="history-refresh">Làm mới</button><button id="history-back">${reviewBackup?'Trở về lượt hiện tại':'Trở về bài làm'}</button></div><p class="history-note">Mỗi lần nộp là một lượt riêng. Có thể xem lại đáp án hoặc bắt đầu một lượt mới.</p>${records.length?`<div class="table-scroll"><table class="history-table"><thead><tr><th>Bài / Lượt</th><th>Thời gian nộp</th><th>Thời gian làm</th><th>Tổng câu</th><th>Đúng</th><th>Sai</th><th>Bỏ qua</th><th>Tỉ lệ đúng</th><th>Thao tác</th></tr></thead><tbody>${records.map((r,i)=>`<tr><td><strong>${esc(r.test)}</strong><small>Lượt ${records.length-i}</small></td><td>${esc(new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'medium',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(r.submittedAt)))}</td><td>${duration(r.elapsed)}</td><td>40</td><td class="score-correct">${r.result.gradedTotal===0?'Chưa chấm':r.result.correct}</td><td class="score-wrong">${r.result.gradedTotal===0?'—':r.result.wrong}</td><td>${r.result.blank}</td><td>${r.result.gradedTotal===0?'—':r.result.correct/40*100+'%'}<div class="progress"><i style="width:${r.result.correct/40*100}%"></i></div></td><td><div class="history-actions"><button data-history-view="${esc(r.id)}">Xem lại</button><button data-history-retry="${esc(r.id)}">Làm lại</button></div></td></tr>`).join('')}</tbody></table></div>`:`<div class="history-empty"><h2>Chưa có lượt làm nào</h2><p>Nộp một bài ${moduleName()} Vol ${activeVol} để lưu kết quả đầu tiên.</p></div>`}`;
+ const records=getHistory().filter(r=>teacherMode||(r.module||'listening')===activeModule&&+(r.vol||9)===activeVol).slice().reverse();$('history').innerHTML=`<div class="history-heading"><div><div class="eyebrow">${teacherMode?'TẤT CẢ BÀI · LISTENING & READING':`${moduleName().toUpperCase()} · VOL ${activeVol}`}</div><h1>${teacherMode?'Lịch sử làm bài của học viên':'Lịch sử làm bài'}</h1></div><button id="history-refresh">Làm mới</button><button id="history-back">${reviewBackup?'Trở về lượt hiện tại':'Trở về bài làm'}</button></div><p class="history-note">${teacherMode?'Mỗi dòng là một lần nộp bài, mới nhất trước.':'Mỗi lần nộp là một lượt riêng. Có thể xem lại đáp án hoặc bắt đầu một lượt mới.'}</p>${cloudStatusText()?`<p class="cloud-status${historyStore.status().syncError?' cloud-error':''}" role="status">${esc(cloudStatusText())}</p>`:''}${records.length?`<div class="table-scroll"><table class="history-table"><thead><tr><th>Bài / Lượt</th><th>Thời gian nộp</th><th>Thời gian làm</th><th>Tổng câu</th><th>Đúng</th><th>Sai</th><th>Bỏ qua</th><th>Tỉ lệ đúng</th><th>Thao tác</th></tr></thead><tbody>${records.map((r,i)=>`<tr><td><strong>${esc(r.test)}</strong><small>Lượt ${records.length-i}</small></td><td>${esc(new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'medium',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(r.submittedAt)))}</td><td>${duration(r.elapsed)}</td><td>40</td><td class="score-correct">${r.result.gradedTotal===0?'Chưa chấm':r.result.correct}</td><td class="score-wrong">${r.result.gradedTotal===0?'—':r.result.wrong}</td><td>${r.result.blank}</td><td>${r.result.gradedTotal===0?'—':r.result.correct/40*100+'%'}<div class="progress"><i style="width:${r.result.correct/40*100}%"></i></div></td><td><div class="history-actions"><button data-history-view="${esc(r.id)}">Xem lại</button><button data-history-retry="${esc(r.id)}">Làm lại</button></div></td></tr>`).join('')}</tbody></table></div>`:`<div class="history-empty"><h2>Chưa có lượt làm nào</h2><p>Nộp một bài ${moduleName()} Vol ${activeVol} để lưu kết quả đầu tiên.</p></div>`}`;
  $('history-refresh').onclick=refreshHistory;
  $('history-back').onclick=reviewBackup?returnCurrent:inLibrary?showLibrary:showExam;
  $('history').onclick=e=>{const view=e.target.closest('[data-history-view]'),retry=e.target.closest('[data-history-retry]');if(retry){const r=getHistory().find(x=>x.id===retry.dataset.historyRetry);pendingRetry={id:r?.testId||1,module:r?.module||'listening',vol:+(r?.vol||9)};$('restart-dialog').showModal();return}if(view)openAttemptReview(view.dataset.historyView);};
@@ -317,7 +344,7 @@ audio.addEventListener('play',()=>{if(activeModule!=='listening'||inLibrary||(!a
 $('back-library').onclick=()=>requestLeave();$('abort-attempt').onclick=()=>requestLeave();$('abort-continue').onclick=()=>{$('abort-dialog').close();pendingTest=null;};$('abort-confirm').onclick=()=>{const id=pendingTest;$('abort-dialog').close();clearAttempt();pendingTest=null;navigateSelection(id);};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-start-test]');if(b){e.preventDefault();requestLeave({id:+b.dataset.startTest,module:b.dataset.module||'listening',vol:+(b.dataset.vol||9)})}});
 $('restart-cancel').onclick=()=>{$('restart-dialog').close();pendingRetry=null;};$('restart-confirm').onclick=()=>{$('restart-dialog').close();startTest(pendingRetry||activeTest);};
-async function initialize(){const params=new URLSearchParams(location.search);if(params.get('module')==='reading')activeModule='reading';const vol=+params.get('vol');activeVol=vols().includes(vol)?vol:vols()[0];TEST=catalog[activeModule][activeVol][1];render();clock();updateHistoryStatus();await refreshHistory();}
+async function initialize(){const params=new URLSearchParams(location.search);if(params.get('module')==='reading')activeModule='reading';const vol=+params.get('vol');activeVol=vols().includes(vol)?vol:vols()[0];TEST=catalog[activeModule][activeVol][1];render();clock();updateHistoryStatus();if(teacherMode){document.body.classList.add('teacher-mode');showHistory();}await checkCloudKey();await refreshHistory();}
 window.addEventListener('online',refreshHistory);
 window.addEventListener('focus',()=>{if(!$('history').hidden)refreshHistory()});
 setInterval(()=>{if(!document.hidden&&!$('history').hidden)refreshHistory()},30000);
