@@ -1,6 +1,6 @@
 import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
-import {readFile,mkdir} from 'node:fs/promises';
+import {readFile,mkdir,stat} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -27,7 +27,8 @@ http.createServer(async(req,res)=>{try{
  }
  if(pathname.startsWith('/api/'))return send(res,404,{error:'not_found'});
  if(req.method!=='GET')return send(res,405,{error:'method_not_allowed'});
- const base=path.join(root,'dist'),file=path.resolve(base,'.'+decodeURIComponent(pathname==='/'?'/index.html':pathname));if(!file.startsWith(base+path.sep))return send(res,404,{error:'not_found'});
+ const base=path.join(root,'dist'),file=path.resolve(base,'.'+decodeURIComponent(pathname.endsWith('/')?pathname+'index.html':pathname));if(!file.startsWith(base+path.sep))return send(res,404,{error:'not_found'});
+ if((await stat(file).catch(()=>null))?.isDirectory())return send(res,301,'',{Location:pathname+'/'}); // like GitHub Pages: /teacher → /teacher/
  let content=await readFile(file);const ext=path.extname(file);if(ext==='.html')content=content.toString().replace('<head>','<head><script>window.ECHO_LOCAL_HISTORY=true;</script>');
  return send(res,200,content,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.mp3':'audio/mpeg'}[ext]||'application/octet-stream'),'Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"});
 }catch(e){send(res,e.code==='ENOENT'?404:e.message==='too_large'?413:400,{error:'request_failed'});}}).listen(port,host,()=>console.log(`EchoPrep server ready at ${origin}`));

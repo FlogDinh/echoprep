@@ -57,5 +57,27 @@ try{
  await student.wait("document.readyState==='complete'&&localStorage.getItem('echoprep:cloud-key:v1')===null");
  const wrong=await page(base+'?badteacher=1#teacher='+'y'.repeat(32));
  await wrong.wait("$('history').textContent.includes('không còn hiệu lực')");
- console.log('PASS CLOUD HISTORY: student link uploads old attempts and saves new ones online, key hidden from the address bar, teacher link read-only with all attempts and full review, teacher tests never saved, wrong links rejected.');
+ // 6. /teacher with a password the student sets on the site; the teacher's browser remembers it.
+ await student.open(base+'?pw=1');await student.wait('historyStore.status().synced');
+ assert.equal(await student.evaluate("localStorage.getItem('echoprep:cloud-key:v1')"),null); // forgotten by step 5
+ await student.open(base+'?reconnect=1#connect='+FAKE_KEYS.student);await student.wait('historyStore.status().synced');
+ await student.evaluate("showHistory();window.prompt=()=>'short';window.alert=m=>window.qaAlert=m;$('teacher-password-set').click()");
+ assert.match(await student.evaluate('qaAlert'),/ít nhất 8/);
+ await student.evaluate("window.qaAlert='';window.prompt=()=>'co-giao-2026';$('teacher-password-set').click()");
+ await student.wait("qaAlert.includes('Đã đặt mật khẩu')");
+ assert.match(await student.evaluate('qaAlert'),/Link: http:\/\/127\.0\.0\.1:8083\/teacher[\s\S]*Mật khẩu: co-giao-2026/);
+ const login=await page(base+'teacher');
+ await login.wait("!!document.getElementById('teacher-password')");
+ assert.equal(await login.evaluate('location.hash'),'#teacher');
+ await login.evaluate("$('teacher-password').value='sai-mat-khau';$('teacher-login').requestSubmit()");
+ await login.wait("!$('teacher-login-error').hidden");assert.match(await login.evaluate("$('teacher-login-error').textContent"),/chưa đúng/);
+ await login.evaluate("$('teacher-password').value='co-giao-2026';$('teacher-login').requestSubmit()");
+ await sleep(500);await login.wait("typeof historyStore!=='undefined'&&historyStore.status().synced&&document.querySelectorAll('[data-history-view]').length===2");
+ assert.equal(await login.evaluate("historyStore.status().readOnly&&document.body.classList.contains('teacher-mode')"),true);
+ await login.open(base+'teacher/');await login.wait("historyStore.status().synced&&document.querySelectorAll('[data-history-view]').length===2");
+ // Changing the password signs the teacher out with a clear message.
+ await student.evaluate("window.qaAlert='';window.prompt=()=>'mat-khau-moi-99';$('teacher-password-set').click()");await student.wait("qaAlert.includes('Đã đặt mật khẩu')");
+ await login.open(base+'teacher/?after=1');await login.wait("$('history').textContent.includes('Mật khẩu đã được đổi')");
+ assert.equal(await login.evaluate("localStorage.getItem('echoprep:teacher-key:v1')"),null);
+ console.log('PASS CLOUD HISTORY: student link uploads old attempts and saves new ones online, key hidden from the address bar, teacher link read-only with all attempts and full review, teacher tests never saved, wrong links rejected, /teacher with a student-set password (wrong password refused, remembered sign-in, password change signs out).');
 }finally{for(const ws of sockets)ws.close();chrome.kill();server.kill();}
