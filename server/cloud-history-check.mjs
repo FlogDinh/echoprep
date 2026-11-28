@@ -50,6 +50,8 @@ try{
  // A teacher's own test is never written to the student's online history.
  await submit(teacher,{module:'listening',vol:8,id:2});
  assert.equal((await (await fetch(base+'rest/v1/rpc/echoprep_list',{method:'POST',headers:{apikey:'fake-anon-key',Authorization:'Bearer fake-anon-key','Content-Type':'application/json'},body:JSON.stringify({p_key:FAKE_KEYS.student})})).json()).length,2);
+ // Pasting the student link into the tab already showing the teacher link switches to the student view.
+ await teacher.evaluate(`location.hash='connect=${FAKE_KEYS.student}'`);await teacher.wait("document.readyState==='complete'&&typeof teacherMode!=='undefined'&&!teacherMode&&historyStore.status().synced");
  // 5. A wrong student link is forgotten instead of failing every save.
  await student.open(base+'?bad=1#connect='+'x'.repeat(32));
  await student.wait("document.readyState==='complete'&&localStorage.getItem('echoprep:cloud-key:v1')===null");

@@ -28,6 +28,8 @@ const teacherKey=cloudHash.get('teacher')||'',connectKey=cloudHash.get('connect'
 let studentKey='';try{studentKey=connectKey||browserStorage?.getItem(CLOUD_KEY)||''}catch{}
 if(connectKey){try{browserStorage?.setItem(CLOUD_KEY,connectKey)}catch{}history.replaceState(null,'',location.pathname+location.search)}
 const teacherMode=!!teacherKey;let cloudNotice='';
+// Pasting the other link into an open tab only changes the #hash; reload so the new key is read.
+window.addEventListener('hashchange',()=>{if(/^#(connect|teacher)=/.test(location.hash))location.reload()});
 // New publishable keys (sb_publishable_…) go in the apikey header only; legacy anon JWTs also as Bearer.
 function cloudRPC(fn,body){const c=window.ECHO_CLOUD||{};return fetch(`${c.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`,{method:'POST',credentials:'omit',headers:{apikey:c.anonKey,...(c.anonKey.startsWith('sb_')?{}:{Authorization:`Bearer ${c.anonKey}`}),'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)}).then(async r=>{if(!r.ok)throw Error(`cloud_${r.status}`);const t=await r.text();return t?JSON.parse(t):null})}
 function cloudRemote(){
