@@ -28,7 +28,8 @@ const teacherKey=cloudHash.get('teacher')||'',connectKey=cloudHash.get('connect'
 let studentKey='';try{studentKey=connectKey||browserStorage?.getItem(CLOUD_KEY)||''}catch{}
 if(connectKey){try{browserStorage?.setItem(CLOUD_KEY,connectKey)}catch{}history.replaceState(null,'',location.pathname+location.search)}
 const teacherMode=!!teacherKey;let cloudNotice='';
-function cloudRPC(fn,body){const c=window.ECHO_CLOUD||{};return fetch(`${c.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`,{method:'POST',credentials:'omit',headers:{apikey:c.anonKey,Authorization:`Bearer ${c.anonKey}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)}).then(async r=>{if(!r.ok)throw Error(`cloud_${r.status}`);const t=await r.text();return t?JSON.parse(t):null})}
+// New publishable keys (sb_publishable_…) go in the apikey header only; legacy anon JWTs also as Bearer.
+function cloudRPC(fn,body){const c=window.ECHO_CLOUD||{};return fetch(`${c.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`,{method:'POST',credentials:'omit',headers:{apikey:c.anonKey,...(c.anonKey.startsWith('sb_')?{}:{Authorization:`Bearer ${c.anonKey}`}),'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)}).then(async r=>{if(!r.ok)throw Error(`cloud_${r.status}`);const t=await r.text();return t?JSON.parse(t):null})}
 function cloudRemote(){
  const c=window.ECHO_CLOUD||{},key=teacherKey||studentKey;if(!c.url||!c.anonKey||!key)return null;
  return {name:'lịch sử online',list:()=>cloudRPC('echoprep_list',{p_key:key}),save:teacherMode?null:record=>cloudRPC('echoprep_save',{p_key:key,p_record:record})};

@@ -7,7 +7,7 @@ export function fakeCloud(req,res,pathname,body,origin){
  if(pathname==='/cloud-config.js'){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});res.end(`window.ECHO_CLOUD={url:${JSON.stringify(origin)},anonKey:${JSON.stringify(FAKE_ANON)}};`);return true}
  const m=pathname.match(/^\/rest\/v1\/rpc\/(echoprep_(?:whoami|list|save))$/);if(!m)return false;
  const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(data===undefined?'':JSON.stringify(data))};
- if(req.method!=='POST'||req.headers.apikey!==FAKE_ANON||req.headers.authorization!==`Bearer ${FAKE_ANON}`)return reply(401,{message:'bad apikey'}),true;
+ if(req.method!=='POST'||req.headers.apikey!==FAKE_ANON||![undefined,`Bearer ${FAKE_ANON}`].includes(req.headers.authorization))return reply(401,{message:'bad apikey'}),true;
  return body().then(b=>{
   const role=Object.entries(FAKE_KEYS).find(([,k])=>k===b.p_key)?.[0]||null;
   if(m[1]==='echoprep_whoami')return reply(200,role);
